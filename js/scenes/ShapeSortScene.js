@@ -582,26 +582,28 @@ export class ShapeSortScene extends Phaser.Scene {
         }).setOrigin(0.5);
         btnContainer.add(label);
 
-        // Hitbox
-        const zone = this.add.zone(0, 0, 100, 44)
-            .setInteractive({ useHandCursor: true });
-        btnContainer.add(zone);
+        // FIX: Set interactive pada container langsung
+        btnContainer.setSize(100, 44);
+        btnContainer.setInteractive(
+            new Phaser.Geom.Rectangle(-50, -22, 100, 44),
+            Phaser.Geom.Rectangle.Contains
+        );
 
-        zone.on('pointerover', () => {
+        btnContainer.on('pointerover', () => {
             label.setStyle({ color: '#ffffff' });
             bg.clear();
             bg.fillStyle(0x000000, 0.5);
             bg.fillRoundedRect(-45, -18, 90, 36, 18);
         });
 
-        zone.on('pointerout', () => {
+        btnContainer.on('pointerout', () => {
             label.setStyle({ color: '#ffffffcc' });
             bg.clear();
             bg.fillStyle(0x000000, 0.3);
             bg.fillRoundedRect(-45, -18, 90, 36, 18);
         });
 
-        zone.on('pointerdown', () => {
+        btnContainer.on('pointerdown', () => {
             if (this.audioManager) this.audioManager.playPop();
             this.cameras.main.fadeOut(300, 0, 0, 0);
             this.cameras.main.once('camerafadeoutcomplete', () => {

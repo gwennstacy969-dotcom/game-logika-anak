@@ -8,6 +8,9 @@
  * - Posisi awal yang disimpan untuk bounce-back
  * - Status isPlaced untuk menandai sudah cocok
  * - Visual: sprite dengan warna cerah dan shadow
+ * 
+ * FIX: Menggunakan scene.input.setDraggable() secara eksplisit
+ * untuk memastikan drag bekerja di semua versi Phaser 3.
  */
 export class DraggableShape extends Phaser.GameObjects.Container {
 
@@ -151,21 +154,28 @@ export class DraggableShape extends Phaser.GameObjects.Container {
     /**
      * Setup interaksi: buat hitbox besar yang ramah anak.
      * Hitbox 1.5x lebih besar dari visual untuk kemudahan sentuh.
+     * 
+     * FIX: Panggil scene.input.setDraggable() secara eksplisit
+     * setelah setInteractive(). Ini memastikan Phaser 3 mendaftarkan
+     * container ini ke drag system dengan benar.
      */
     _setupInteraction() {
         const hitSize = this.shapeSize * 1.5;
 
-        // Set interactive zone yang lebih besar dari visual
+        // Set ukuran container
         this.setSize(hitSize, hitSize);
-        this.setInteractive({
-            hitArea: new Phaser.Geom.Rectangle(
+
+        // Set interactive dengan hit area rectangle
+        this.setInteractive(
+            new Phaser.Geom.Rectangle(
                 -hitSize / 2, -hitSize / 2,
                 hitSize, hitSize
             ),
-            hitAreaCallback: Phaser.Geom.Rectangle.Contains,
-            draggable: true,
-            useHandCursor: true
-        });
+            Phaser.Geom.Rectangle.Contains
+        );
+
+        // FIX: Eksplisit daftarkan ke drag system Phaser
+        this.scene.input.setDraggable(this);
     }
 
     /**

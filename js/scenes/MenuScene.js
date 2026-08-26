@@ -183,7 +183,7 @@ export class MenuScene extends Phaser.Scene {
             0x555555,
             0x666666,
             () => {
-                // Belum tersedia
+                this._showComingSoon(width / 2, 540);
             },
             400
         );
@@ -196,14 +196,55 @@ export class MenuScene extends Phaser.Scene {
             0x555555,
             0x666666,
             () => {
-                // Belum tersedia
+                this._showComingSoon(width / 2, 630);
             },
             500
         );
     }
 
     /**
+     * Tampilkan popup "Segera Hadir" untuk level yang belum tersedia.
+     */
+    _showComingSoon(x, y) {
+        const text = this.add.text(x, y - 60, '🔒 Segera Hadir!', {
+            fontFamily: 'Nunito, sans-serif',
+            fontSize: '24px',
+            fontStyle: 'bold',
+            color: '#FFD93D',
+            align: 'center',
+            stroke: '#000000',
+            strokeThickness: 3,
+        }).setOrigin(0.5).setDepth(300).setScale(0);
+
+        this.tweens.add({
+            targets: text,
+            scaleX: 1.1,
+            scaleY: 1.1,
+            duration: 250,
+            ease: 'Back.easeOut',
+            onComplete: () => {
+                this.tweens.add({
+                    targets: text,
+                    y: y - 100,
+                    alpha: 0,
+                    scaleX: 0.8,
+                    scaleY: 0.8,
+                    duration: 700,
+                    delay: 500,
+                    ease: 'Sine.easeIn',
+                    onComplete: () => text.destroy()
+                });
+            }
+        });
+    }
+
+    /**
      * Helper: buat tombol interaktif yang besar dan ramah anak.
+     * 
+     * FIX: Menggunakan Graphics-based hit area pada container
+     * dengan setInteractive() langsung pada container, bukan zone child.
+     * Ini memperbaiki masalah klik yang tidak terdeteksi.
+     * 
      * @param {number} x - Center X
      * @param {number} y - Center Y
      * @param {string} label - Teks tombol
@@ -220,6 +261,7 @@ export class MenuScene extends Phaser.Scene {
         // Container untuk grouping
         const container = this.add.container(x, y);
         container.setScale(0);
+        container.setDepth(10);
 
         // Background tombol
         const bg = this.add.graphics();
@@ -249,19 +291,31 @@ export class MenuScene extends Phaser.Scene {
         }).setOrigin(0.5);
         container.add(descText);
 
-        // Hitbox interaktif (lebih besar dari visual)
-        const hitZone = this.add.zone(0, 0, btnWidth + 20, btnHeight + 20)
-            .setInteractive({ useHandCursor: true });
-        container.add(hitZone);
+        // ===== FIX: Set interactive langsung pada container =====
+        // Menggunakan setSize + setInteractive pada container itu sendiri
+        // Ini jauh lebih reliable daripada child zone di dalam container
+        container.setSize(btnWidth + 20, btnHeight + 20);
+        container.setInteractive({
+            hitArea: new Phaser.Geom.Rectangle(
+                -(btnWidth + 20) / 2, -(btnHeight + 20) / 2,
+                btnWidth + 20, btnHeight + 20
+            ),
+            hitAreaCallback: Phaser.Geom.Rectangle.Contains,
+            useHandCursor: true
+        });
 
-        // --- Event handlers ---
-        hitZone.on('pointerover', () => {
+        // --- Redraw helper ---
+        const redrawBg = (fillColor, borderAlpha) => {
             bg.clear();
-            bg.fillStyle(hoverColor, 1);
+            bg.fillStyle(fillColor, 1);
             bg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 20);
-            bg.lineStyle(2, 0xffffff, 0.3);
+            bg.lineStyle(2, 0xffffff, borderAlpha);
             bg.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 20);
-            
+        };
+
+        // --- Event handlers langsung pada container ---
+        container.on('pointerover', () => {
+            redrawBg(hoverColor, 0.3);
             this.tweens.add({
                 targets: container,
                 scaleX: 1.05,
@@ -271,13 +325,8 @@ export class MenuScene extends Phaser.Scene {
             });
         });
 
-        hitZone.on('pointerout', () => {
-            bg.clear();
-            bg.fillStyle(color, 1);
-            bg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 20);
-            bg.lineStyle(2, 0xffffff, 0.15);
-            bg.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 20);
-
+        container.on('pointerout', () => {
+            redrawBg(color, 0.15);
             this.tweens.add({
                 targets: container,
                 scaleX: 1.0,
@@ -287,7 +336,12 @@ export class MenuScene extends Phaser.Scene {
             });
         });
 
-        hitZone.on('pointerdown', () => {
+        container.on('pointerdown', () => {
+            // Init audio pada klik pertama
+            const audioManager = this.registry.get('audioManager');
+            if (audioManager) audioManager.init();
+
+            // Press effect lalu fire callback
             this.tweens.add({
                 targets: container,
                 scaleX: 0.95,
@@ -295,7 +349,9 @@ export class MenuScene extends Phaser.Scene {
                 duration: 80,
                 yoyo: true,
                 ease: 'Sine.easeInOut',
-                onComplete: onClick
+                onComplete: () => {
+                    if (onClick) onClick();
+                }
             });
         });
 
