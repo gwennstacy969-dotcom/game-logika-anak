@@ -48,6 +48,10 @@ export class DraggableShape extends Phaser.GameObjects.Container {
         // --- Setup interaksi drag ---
         this._setupInteraction();
 
+        // Mulai dalam keadaan non-interactive.
+        // Scene harus memanggil enableDrag() setelah animasi masuk selesai.
+        this.disableInteractive();
+
         // Tambahkan ke scene
         scene.add.existing(this);
     }
@@ -175,6 +179,21 @@ export class DraggableShape extends Phaser.GameObjects.Container {
         );
 
         // FIX: Eksplisit daftarkan ke drag system Phaser
+        this.scene.input.setDraggable(this);
+    }
+
+    /**
+     * Aktifkan drag setelah animasi masuk selesai.
+     * Dipanggil dari scene saat shape sudah visible dan siap dimainkan.
+     */
+    enableDrag() {
+        this.setInteractive(
+            new Phaser.Geom.Rectangle(
+                -this.shapeSize * 1.5 / 2, -this.shapeSize * 1.5 / 2,
+                this.shapeSize * 1.5, this.shapeSize * 1.5
+            ),
+            Phaser.Geom.Rectangle.Contains
+        );
         this.scene.input.setDraggable(this);
     }
 

@@ -224,6 +224,8 @@ export class ShapeSortScene extends Phaser.Scene {
             this.shapes.push(shape);
 
             // Animasi masuk: shapes pop in satu per satu
+            // FIX: enableDrag() dipanggil setelah animasi selesai
+            // agar shape tidak bisa di-drag saat masih invisible (scale 0)
             shape.setScale(0);
             this.tweens.add({
                 targets: shape,
@@ -231,7 +233,10 @@ export class ShapeSortScene extends Phaser.Scene {
                 scaleY: 1,
                 duration: 400,
                 delay: 300 + index * 150,
-                ease: 'Back.easeOut'
+                ease: 'Back.easeOut',
+                onComplete: () => {
+                    shape.enableDrag();
+                }
             });
         });
 

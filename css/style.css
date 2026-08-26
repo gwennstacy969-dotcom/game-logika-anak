@@ -24,7 +24,6 @@ html, body {
     background-color: #0f0e17;        /* Warna di belakang canvas */
 
     /* --- Touch Handling --- */
-    touch-action: none;               /* Disable semua gesture default */
     -webkit-touch-callout: none;      /* iOS: disable callout */
     -webkit-user-select: none;        /* Disable text selection */
     -moz-user-select: none;
@@ -44,6 +43,9 @@ html, body {
     justify-content: center;
     background: linear-gradient(135deg, #0f0e17 0%, #1a1a2e 50%, #16213e 100%);
 
+    /* touch-action pada container + canvas agar Phaser tangkap semua touch */
+    touch-action: none;
+
     /* Safe area untuk HP dengan notch */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
@@ -57,6 +59,8 @@ html, body {
     border-radius: 12px;
     /* Subtle shadow untuk kedalaman */
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    /* Pastikan touch ditangkap canvas, bukan browser */
+    touch-action: none;
 }
 
 /* --- Loading Screen (sebelum Phaser load) --- */
@@ -104,6 +108,7 @@ html, body {
 /* --- Rotate Message (portrait mode) --- */
 #rotate-message {
     display: none;
+    pointer-events: none;            /* Jangan halangi input saat tersembunyi */
     position: fixed;
     top: 0;
     left: 0;
@@ -140,5 +145,6 @@ html, body {
 @media (orientation: portrait) and (max-width: 768px) {
     #rotate-message {
         display: flex;
+        pointer-events: auto;        /* Aktif saat ditampilkan */
     }
 }

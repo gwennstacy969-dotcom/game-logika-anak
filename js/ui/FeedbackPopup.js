@@ -261,11 +261,11 @@ export class FeedbackPopup {
                 scaleY: 0.92,
                 duration: 60,
                 yoyo: true,
-                ease: 'Sine.easeInOut',
-                onComplete: () => {
-                    if (onClick) onClick();
-                }
+                ease: 'Sine.easeInOut'
             });
+
+            // Fire callback langsung tanpa menunggu animasi
+            if (onClick) onClick();
         });
 
         return container;

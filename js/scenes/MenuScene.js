@@ -34,11 +34,8 @@ export class MenuScene extends Phaser.Scene {
         // --- Tombol Level ---
         this._createLevelButtons(width, height);
 
-        // --- Inisialisasi audio saat pertama kali user klik ---
-        this.input.once('pointerdown', () => {
-            const audioManager = this.registry.get('audioManager');
-            if (audioManager) audioManager.init();
-        });
+        // Audio diinisialisasi di dalam handler tombol/input
+        // agar tidak mencuri klik pertama dari user.
     }
 
     /**
@@ -341,18 +338,18 @@ export class MenuScene extends Phaser.Scene {
             const audioManager = this.registry.get('audioManager');
             if (audioManager) audioManager.init();
 
-            // Press effect lalu fire callback
+            // Press effect (visual only — jangan tunda callback)
             this.tweens.add({
                 targets: container,
                 scaleX: 0.95,
                 scaleY: 0.95,
                 duration: 80,
                 yoyo: true,
-                ease: 'Sine.easeInOut',
-                onComplete: () => {
-                    if (onClick) onClick();
-                }
+                ease: 'Sine.easeInOut'
             });
+
+            // Fire callback langsung tanpa menunggu animasi
+            if (onClick) onClick();
         });
 
         // --- Animasi masuk ---

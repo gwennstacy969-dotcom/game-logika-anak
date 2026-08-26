@@ -108,6 +108,20 @@ document.addEventListener('contextmenu', (e) => {
     }
 });
 
+// --- Prevent touch defaults pada canvas (scroll, zoom, pull-to-refresh) ---
+// Ini memastikan semua touch event diteruskan ke Phaser tanpa dicuri browser
+document.addEventListener('touchmove', (e) => {
+    if (e.target.tagName === 'CANVAS') {
+        e.preventDefault();
+    }
+}, { passive: false });
+
+document.addEventListener('touchstart', (e) => {
+    if (e.target.tagName === 'CANVAS') {
+        e.preventDefault();
+    }
+}, { passive: false });
+
 // --- Log info ---
 console.log('🎮 Game Logika & Matematika Dasar');
 console.log('📐 Base Resolution: 1280×720');
