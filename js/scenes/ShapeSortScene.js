@@ -223,8 +223,7 @@ export class ShapeSortScene extends Phaser.Scene {
 
             this.shapes.push(shape);
 
-            // Animasi masuk: shapes pop in satu per satu
-            // FIX: enableDrag() dipanggil setelah animasi selesai
+            // FIX: Set canDrag = true dan mulai animasi idle setelah animasi masuk selesai
             // agar shape tidak bisa di-drag saat masih invisible (scale 0)
             shape.setScale(0);
             this.tweens.add({
@@ -235,7 +234,8 @@ export class ShapeSortScene extends Phaser.Scene {
                 delay: 300 + index * 150,
                 ease: 'Back.easeOut',
                 onComplete: () => {
-                    shape.enableDrag();
+                    shape.canDrag = true;
+                    shape.startIdleAnimation();
                 }
             });
         });
@@ -262,7 +262,7 @@ export class ShapeSortScene extends Phaser.Scene {
         // --- DRAG START ---
         // Saat anak mulai menyentuh/klik shape
         this.input.on('dragstart', (pointer, gameObject) => {
-            if (gameObject.isPlaced || this.levelCompleted) return;
+            if (gameObject.isPlaced || this.levelCompleted || !gameObject.canDrag) return;
 
             // Visual feedback: shape membesar sedikit
             gameObject.setPickedUp();
@@ -277,7 +277,7 @@ export class ShapeSortScene extends Phaser.Scene {
         // --- DRAG ---
         // Saat shape di-drag mengikuti jari/mouse
         this.input.on('drag', (pointer, gameObject, dragX, dragY) => {
-            if (gameObject.isPlaced || this.levelCompleted) return;
+            if (gameObject.isPlaced || this.levelCompleted || !gameObject.canDrag) return;
 
             // Update posisi shape mengikuti pointer
             gameObject.x = dragX;
@@ -287,7 +287,7 @@ export class ShapeSortScene extends Phaser.Scene {
         // --- DRAG END ---
         // Saat anak melepas shape
         this.input.on('dragend', (pointer, gameObject) => {
-            if (gameObject.isPlaced || this.levelCompleted) return;
+            if (gameObject.isPlaced || this.levelCompleted || !gameObject.canDrag) return;
 
             // Visual: kembali ke ukuran normal
             gameObject.setDropped();

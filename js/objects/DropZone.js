@@ -43,34 +43,46 @@ export class DropZone extends Phaser.GameObjects.Container {
 
     /**
      * Buat visual outline bentuk sebagai panduan anak.
-     * Menggunakan dashed outline dengan glow effect.
+     * Menggunakan dashed outline dengan glow effect yang lebih baik.
      */
     _createVisual() {
         const s = this.zoneSize;
         const color = this.zoneColor;
 
-        // Background circle/area dengan warna transparan
+        // Background circle/area dengan warna transparan (lubang)
         const bg = this.scene.add.graphics();
-        bg.fillStyle(color, 0.08);
+        bg.fillStyle(0x000000, 0.2); // Lebih gelap untuk kesan lubang
         bg.fillCircle(0, 0, s * 0.7);
+        
+        // Inner shadow untuk lubang
+        bg.lineStyle(4, 0x000000, 0.3);
+        bg.strokeCircle(0, 0, s * 0.7);
         this.add(bg);
 
-        // Outline bentuk (dashed look via multiple segments)
+        // Outline bentuk (siluet target)
         this.outlineGraphics = this.scene.add.graphics();
-        this._drawOutline(this.outlineGraphics, this.acceptedShape, s, color, 0.4);
+        this._drawOutline(this.outlineGraphics, this.acceptedShape, s, color, 0.6);
         this.add(this.outlineGraphics);
+
+        // Glow animasi untuk outline
+        this.glowGraphics = this.scene.add.graphics();
+        this._drawOutline(this.glowGraphics, this.acceptedShape, s * 1.05, color, 0.3);
+        this.glowGraphics.setBlendMode(Phaser.BlendModes.ADD);
+        this.add(this.glowGraphics);
 
         // Pulse animation untuk menarik perhatian anak
         this.scene.tweens.add({
-            targets: this.outlineGraphics,
-            alpha: { from: 0.3, to: 0.6 },
+            targets: [this.outlineGraphics, this.glowGraphics],
+            alpha: { from: 0.4, to: 1 },
+            scaleX: { from: 0.98, to: 1.02 },
+            scaleY: { from: 0.98, to: 1.02 },
             duration: 1200,
             yoyo: true,
             repeat: -1,
             ease: 'Sine.easeInOut'
         });
 
-        // Label bentuk di bawah zona (opsional)
+        // Label bentuk di bawah zona
         const labelMap = {
             circle: 'Lingkaran',
             triangle: 'Segitiga',
@@ -78,26 +90,21 @@ export class DropZone extends Phaser.GameObjects.Container {
             star: 'Bintang'
         };
 
-        this.label = this.scene.add.text(0, s * 0.65, labelMap[this.acceptedShape] || '', {
+        this.label = this.scene.add.text(0, s * 0.7, labelMap[this.acceptedShape] || '', {
             fontFamily: 'Nunito, sans-serif',
             fontSize: '16px',
             fontStyle: 'bold',
             color: '#ffffff',
             align: 'center'
-        }).setOrigin(0.5).setAlpha(0.6);
+        }).setOrigin(0.5).setAlpha(0.7);
         this.add(this.label);
     }
 
     /**
-     * Gambar outline bentuk.
-     * @param {Phaser.GameObjects.Graphics} graphics
-     * @param {string} type - Tipe bentuk
-     * @param {number} size - Ukuran
-     * @param {number} color - Warna
-     * @param {number} alpha - Transparansi
+     * Gambar outline bentuk (tebal dengan rounded corners dimana mungkin).
      */
     _drawOutline(graphics, type, size, color, alpha) {
-        graphics.lineStyle(3, color, alpha);
+        graphics.lineStyle(5, color, alpha);
 
         const half = size / 2;
 
@@ -115,7 +122,7 @@ export class DropZone extends Phaser.GameObjects.Container {
                 break;
 
             case 'square':
-                graphics.strokeRect(-half, -half, size, size);
+                graphics.strokeRoundedRect(-half, -half, size, size, size * 0.12);
                 break;
 
             case 'star':
@@ -128,7 +135,7 @@ export class DropZone extends Phaser.GameObjects.Container {
      * Gambar outline bintang.
      */
     _strokeStar(graphics, cx, cy, outerR, innerR, points, color, alpha) {
-        graphics.lineStyle(3, color, alpha);
+        graphics.lineStyle(5, color, alpha);
         const step = Math.PI / points;
         const vertices = [];
 
@@ -172,27 +179,39 @@ export class DropZone extends Phaser.GameObjects.Container {
 
         // Stop pulse animation
         this.scene.tweens.killTweensOf(this.outlineGraphics);
-        this.outlineGraphics.setAlpha(0.2);
+        this.scene.tweens.killTweensOf(this.glowGraphics);
+        
+        this.outlineGraphics.setAlpha(0);
+        this.glowGraphics.setAlpha(0);
 
         // Glow effect saat terisi
         const glow = this.scene.add.graphics();
-        glow.fillStyle(this.zoneColor, 0.15);
+        glow.fillStyle(this.zoneColor, 0.4);
         glow.fillCircle(0, 0, this.zoneSize * 0.7);
+        glow.setBlendMode(Phaser.BlendModes.ADD);
         this.add(glow);
 
         // Fade in glow
         glow.setAlpha(0);
         this.scene.tweens.add({
             targets: glow,
-            alpha: 0.3,
+            alpha: 0.6,
+            scaleX: 1.1,
+            scaleY: 1.1,
             duration: 300,
-            ease: 'Sine.easeOut'
+            yoyo: true,
+            ease: 'Sine.easeOut',
+            onComplete: () => {
+                glow.setAlpha(0.2);
+                glow.setScale(1);
+            }
         });
 
-        // Sembunyikan label
+        // Sembunyikan label dengan fade out
         this.scene.tweens.add({
             targets: this.label,
             alpha: 0,
+            y: this.label.y + 10,
             duration: 200
         });
     }
