@@ -7,10 +7,8 @@
  * - shapeType: tipe bentuk ('circle', 'triangle', 'square', 'star')
  * - Posisi awal yang disimpan untuk bounce-back
  * - Status isPlaced untuk menandai sudah cocok
- * - Visual: sprite dengan warna cerah dan shadow
- * 
- * FIX: Menggunakan scene.input.setDraggable() secara eksplisit
- * untuk memastikan drag bekerja di semua versi Phaser 3.
+ * - canDrag flag untuk kontrol kapan drag diperbolehkan
+ * - Visual: bentuk 3D dengan shadow, highlight, glow, dan outline
  */
 export class DraggableShape extends Phaser.GameObjects.Container {
 
@@ -36,6 +34,9 @@ export class DraggableShape extends Phaser.GameObjects.Container {
         /** @type {boolean} Apakah sudah ditempatkan di zona yang benar */
         this.isPlaced = false;
 
+        /** @type {boolean} Apakah shape boleh di-drag (diset oleh scene) */
+        this.canDrag = false;
+
         /** @type {number} Warna bentuk */
         this.shapeColor = color;
 
@@ -48,82 +49,76 @@ export class DraggableShape extends Phaser.GameObjects.Container {
         // --- Setup interaksi drag ---
         this._setupInteraction();
 
-        // Mulai dalam keadaan non-interactive.
-        // Scene harus memanggil enableDrag() setelah animasi masuk selesai.
-        this.disableInteractive();
-
         // Tambahkan ke scene
         scene.add.existing(this);
     }
 
     /**
-     * Buat grafik visual bentuk dengan shadow dan gradient-like effect.
+     * Buat grafik visual bentuk dengan shadow, outline, glow, dan highlight.
+     * Memberikan tampilan 3D yang menarik untuk anak-anak.
      */
     _createVisual() {
         const s = this.shapeSize;
         const color = this.shapeColor;
 
-        // Shadow (dark version di belakang, offset ke bawah)
+        // 1. Outer glow (soft spread di belakang)
+        const glow = this.scene.add.graphics();
+        this._drawShape(glow, this.shapeType, 0, 0, s * 1.25, color, 0.12);
+        this.add(glow);
+
+        // 2. Shadow (dark version offset ke bawah-kanan)
         const shadow = this.scene.add.graphics();
-        this._drawShape(shadow, this.shapeType, 0, 4, s, 0x000000, 0.2);
+        this._drawShape(shadow, this.shapeType, 3, 5, s, 0x000000, 0.25);
         this.add(shadow);
 
-        // Main shape (bentuk utama berwarna cerah)
+        // 3. Main shape (bentuk utama berwarna cerah)
         const main = this.scene.add.graphics();
         this._drawShape(main, this.shapeType, 0, 0, s, color, 1);
         this.add(main);
 
-        // Highlight (versi terang kecil di atas untuk efek 3D)
+        // 4. Outline stroke untuk kejelasan bentuk
+        const outline = this.scene.add.graphics();
+        this._drawShapeOutline(outline, this.shapeType, 0, 0, s, 
+            Phaser.Display.Color.ValueToColor(color).darken(25).color, 0.5);
+        this.add(outline);
+
+        // 5. Inner highlight (efek cahaya 3D dari atas)
         const highlight = this.scene.add.graphics();
-        this._drawShape(highlight, this.shapeType, 0, -2, s * 0.7, 
-            Phaser.Display.Color.ValueToColor(color).lighten(30).color, 0.4);
+        this._drawShape(highlight, this.shapeType, -1, -3, s * 0.55,
+            Phaser.Display.Color.ValueToColor(color).lighten(45).color, 0.45);
         this.add(highlight);
 
-        // Label nama bentuk di bawah (opsional, untuk edukasi)
-        const labels = {
-            circle: '●',
-            triangle: '▲',
-            square: '■',
-            star: '★'
-        };
+        // 6. Titik cahaya kecil (specular highlight)
+        const specular = this.scene.add.graphics();
+        specular.fillStyle(0xffffff, 0.6);
+        specular.fillCircle(-s * 0.12, -s * 0.15, s * 0.08);
+        this.add(specular);
     }
 
     /**
      * Gambar bentuk tertentu ke graphics object.
-     * @param {Phaser.GameObjects.Graphics} graphics 
-     * @param {string} type - Tipe bentuk
-     * @param {number} offsetX - Offset X
-     * @param {number} offsetY - Offset Y
-     * @param {number} size - Ukuran
-     * @param {number} color - Warna hex
-     * @param {number} alpha - Transparansi
      */
     _drawShape(graphics, type, offsetX, offsetY, size, color, alpha) {
         graphics.fillStyle(color, alpha);
-
         const half = size / 2;
 
         switch (type) {
             case 'circle':
                 graphics.fillCircle(offsetX, offsetY, half);
                 break;
-
             case 'triangle':
                 graphics.fillTriangle(
-                    offsetX, offsetY - half,           // Atas
-                    offsetX - half, offsetY + half,    // Kiri bawah
-                    offsetX + half, offsetY + half     // Kanan bawah
+                    offsetX, offsetY - half,
+                    offsetX - half, offsetY + half,
+                    offsetX + half, offsetY + half
                 );
                 break;
-
             case 'square':
-                // Persegi dengan sudut sedikit rounded (via fillRect)
-                graphics.fillRect(
+                graphics.fillRoundedRect(
                     offsetX - half, offsetY - half,
-                    size, size
+                    size, size, size * 0.12
                 );
                 break;
-
             case 'star':
                 this._drawStar(graphics, offsetX, offsetY, half, half * 0.45, 5);
                 break;
@@ -131,40 +126,80 @@ export class DraggableShape extends Phaser.GameObjects.Container {
     }
 
     /**
-     * Gambar bintang 5 titik.
-     * @param {Phaser.GameObjects.Graphics} graphics
-     * @param {number} cx - Center X
-     * @param {number} cy - Center Y
-     * @param {number} outerR - Radius luar
-     * @param {number} innerR - Radius dalam
-     * @param {number} points - Jumlah titik
+     * Gambar outline (stroke) bentuk.
+     */
+    _drawShapeOutline(graphics, type, offsetX, offsetY, size, color, alpha) {
+        graphics.lineStyle(2.5, color, alpha);
+        const half = size / 2;
+
+        switch (type) {
+            case 'circle':
+                graphics.strokeCircle(offsetX, offsetY, half);
+                break;
+            case 'triangle':
+                graphics.strokeTriangle(
+                    offsetX, offsetY - half,
+                    offsetX - half, offsetY + half,
+                    offsetX + half, offsetY + half
+                );
+                break;
+            case 'square':
+                graphics.strokeRoundedRect(
+                    offsetX - half, offsetY - half,
+                    size, size, size * 0.12
+                );
+                break;
+            case 'star':
+                this._strokeStar(graphics, offsetX, offsetY, half, half * 0.45, 5, color, alpha);
+                break;
+        }
+    }
+
+    /**
+     * Gambar bintang 5 titik (fill).
      */
     _drawStar(graphics, cx, cy, outerR, innerR, points) {
         const step = Math.PI / points;
         const vertices = [];
-
         for (let i = 0; i < 2 * points; i++) {
             const radius = i % 2 === 0 ? outerR : innerR;
-            const angle = i * step - Math.PI / 2; // Mulai dari atas
+            const angle = i * step - Math.PI / 2;
             vertices.push(new Phaser.Geom.Point(
                 cx + radius * Math.cos(angle),
                 cy + radius * Math.sin(angle)
             ));
         }
-
         graphics.fillPoints(vertices, true);
     }
 
     /**
+     * Gambar bintang 5 titik (stroke).
+     */
+    _strokeStar(graphics, cx, cy, outerR, innerR, points, color, alpha) {
+        graphics.lineStyle(2.5, color, alpha);
+        const step = Math.PI / points;
+        const vertices = [];
+        for (let i = 0; i < 2 * points; i++) {
+            const radius = i % 2 === 0 ? outerR : innerR;
+            const angle = i * step - Math.PI / 2;
+            vertices.push(new Phaser.Geom.Point(
+                cx + radius * Math.cos(angle),
+                cy + radius * Math.sin(angle)
+            ));
+        }
+        graphics.strokePoints(vertices, true);
+    }
+
+    /**
      * Setup interaksi: buat hitbox besar yang ramah anak.
-     * Hitbox 1.5x lebih besar dari visual untuk kemudahan sentuh.
+     * Hitbox 2x lebih besar dari visual untuk kemudahan sentuh.
      * 
-     * FIX: Panggil scene.input.setDraggable() secara eksplisit
-     * setelah setInteractive(). Ini memastikan Phaser 3 mendaftarkan
-     * container ini ke drag system dengan benar.
+     * Menggunakan flag `canDrag` untuk kontrol — TIDAK menggunakan
+     * disableInteractive/enableInteractive yang unreliable pada Container.
      */
     _setupInteraction() {
-        const hitSize = this.shapeSize * 1.5;
+        // Hitbox 2x ukuran shape agar mudah ditap anak kecil
+        const hitSize = this.shapeSize * 2;
 
         // Set ukuran container
         this.setSize(hitSize, hitSize);
@@ -178,23 +213,35 @@ export class DraggableShape extends Phaser.GameObjects.Container {
             Phaser.Geom.Rectangle.Contains
         );
 
-        // FIX: Eksplisit daftarkan ke drag system Phaser
+        // Daftarkan ke drag system Phaser
         this.scene.input.setDraggable(this);
     }
 
     /**
-     * Aktifkan drag setelah animasi masuk selesai.
-     * Dipanggil dari scene saat shape sudah visible dan siap dimainkan.
+     * Mulai animasi idle wobble — dipanggil setelah shape muncul.
+     * Memberikan kesan "hidup" pada shape yang mengundang interaksi.
      */
-    enableDrag() {
-        this.setInteractive(
-            new Phaser.Geom.Rectangle(
-                -this.shapeSize * 1.5 / 2, -this.shapeSize * 1.5 / 2,
-                this.shapeSize * 1.5, this.shapeSize * 1.5
-            ),
-            Phaser.Geom.Rectangle.Contains
-        );
-        this.scene.input.setDraggable(this);
+    startIdleAnimation() {
+        this._idleTween = this.scene.tweens.add({
+            targets: this,
+            angle: { from: -3, to: 3 },
+            duration: Phaser.Math.Between(1800, 2500),
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
+            delay: Phaser.Math.Between(0, 800)
+        });
+    }
+
+    /**
+     * Hentikan animasi idle wobble.
+     */
+    stopIdleAnimation() {
+        if (this._idleTween) {
+            this._idleTween.stop();
+            this._idleTween = null;
+        }
+        this.angle = 0;
     }
 
     /**
@@ -202,14 +249,15 @@ export class DraggableShape extends Phaser.GameObjects.Container {
      * Dipanggil saat dragstart.
      */
     setPickedUp() {
+        this.stopIdleAnimation();
         this.scene.tweens.add({
             targets: this,
-            scaleX: 1.15,
-            scaleY: 1.15,
-            duration: 100,
+            scaleX: 1.2,
+            scaleY: 1.2,
+            angle: 0,
+            duration: 120,
             ease: 'Back.easeOut'
         });
-        // Naikkan depth agar di atas shape lain
         this.setDepth(100);
     }
 
@@ -231,13 +279,10 @@ export class DraggableShape extends Phaser.GameObjects.Container {
     /**
      * Snap shape ke posisi zona yang benar.
      * Animasi smooth dengan ease Back.
-     * @param {number} targetX - Posisi X target
-     * @param {number} targetY - Posisi Y target
-     * @param {Function} [onComplete] - Callback saat selesai
      */
     snapToZone(targetX, targetY, onComplete) {
         this.isPlaced = true;
-        this.disableInteractive(); // Tidak bisa di-drag lagi
+        this.canDrag = false;
 
         this.scene.tweens.add({
             targets: this,
@@ -245,15 +290,16 @@ export class DraggableShape extends Phaser.GameObjects.Container {
             y: targetY,
             scaleX: 1.0,
             scaleY: 1.0,
-            duration: 250,
+            angle: 0,
+            duration: 300,
             ease: 'Back.easeOut',
             onComplete: () => {
                 // Pulse kecil sebagai konfirmasi visual
                 this.scene.tweens.add({
                     targets: this,
-                    scaleX: 1.1,
-                    scaleY: 1.1,
-                    duration: 150,
+                    scaleX: 1.12,
+                    scaleY: 1.12,
+                    duration: 180,
                     yoyo: true,
                     ease: 'Sine.easeInOut'
                 });
@@ -270,7 +316,7 @@ export class DraggableShape extends Phaser.GameObjects.Container {
         // Gentle shake sebelum bounce back
         this.scene.tweens.add({
             targets: this,
-            x: this.x + 10,
+            x: this.x + 12,
             duration: 50,
             yoyo: true,
             repeat: 2,
@@ -284,7 +330,11 @@ export class DraggableShape extends Phaser.GameObjects.Container {
                     scaleX: 1.0,
                     scaleY: 1.0,
                     duration: 500,
-                    ease: 'Bounce.easeOut'
+                    ease: 'Back.easeOut',
+                    onComplete: () => {
+                        // Restart idle animation setelah kembali
+                        this.startIdleAnimation();
+                    }
                 });
             }
         });
