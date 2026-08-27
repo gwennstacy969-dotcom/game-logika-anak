@@ -11,6 +11,8 @@
 import { BootScene } from './scenes/BootScene.js';
 import { MenuScene } from './scenes/MenuScene.js';
 import { ShapeSortScene } from './scenes/ShapeSortScene.js';
+import { CountingScene } from './scenes/CountingScene.js';
+import { ColorMatchScene } from './scenes/ColorMatchScene.js';
 
 // ============================================
 // PHASER GAME CONFIGURATION
@@ -18,6 +20,7 @@ import { ShapeSortScene } from './scenes/ShapeSortScene.js';
 const config = {
     // --- Renderer ---
     type: Phaser.AUTO,  // Otomatis pilih WebGL atau Canvas
+    resolution: window.devicePixelRatio || 1, // HD untuk layar retina/high-DPI
 
     // --- Scale Manager ---
     // Mengatur agar game responsif di semua ukuran layar
@@ -45,8 +48,8 @@ const config = {
     backgroundColor: '#0f0e17',
 
     // --- Scene Registration ---
-    // Urutan: BootScene → MenuScene → ShapeSortScene
-    scene: [BootScene, MenuScene, ShapeSortScene],
+    // Urutan: BootScene → MenuScene → ShapeSortScene → CountingScene → ColorMatchScene
+    scene: [BootScene, MenuScene, ShapeSortScene, CountingScene, ColorMatchScene],
 
     // --- Input Configuration ---
     input: {

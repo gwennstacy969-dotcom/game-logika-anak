@@ -172,28 +172,46 @@ export class MenuScene extends Phaser.Scene {
             200  // Delay animasi
         );
 
-        // --- Tombol Level 2: Coming Soon ---
+        // --- Tombol Level 2: Menghitung Objek ---
         this._createButton(
             width / 2, 540,
             '🔢 Menghitung Objek',
-            'Segera hadir!',
-            0x555555,
-            0x666666,
+            'Hitung benda dan pilih angkanya! (5 ronde)',
+            0x4A90D9,      // Biru
+            0x3A80C9,      // Biru hover
             () => {
-                this._showComingSoon(width / 2, 540);
+                const audioManager = this.registry.get('audioManager');
+                if (audioManager) {
+                    audioManager.init();
+                    audioManager.playPop();
+                }
+
+                this.cameras.main.fadeOut(400, 0, 0, 0);
+                this.cameras.main.once('camerafadeoutcomplete', () => {
+                    this.scene.start('CountingScene');
+                });
             },
             400
         );
 
-        // --- Tombol Level 3: Coming Soon ---
+        // --- Tombol Level 3: Mengenal Warna ---
         this._createButton(
             width / 2, 630,
             '🎨 Mengenal Warna',
-            'Segera hadir!',
-            0x555555,
-            0x666666,
+            'Kelompokkan benda sesuai warnanya! (3 tahap)',
+            0xFFB03B,      // Kuning-Oranye
+            0xEFA02B,      // Hover
             () => {
-                this._showComingSoon(width / 2, 630);
+                const audioManager = this.registry.get('audioManager');
+                if (audioManager) {
+                    audioManager.init();
+                    audioManager.playPop();
+                }
+
+                this.cameras.main.fadeOut(400, 0, 0, 0);
+                this.cameras.main.once('camerafadeoutcomplete', () => {
+                    this.scene.start('ColorMatchScene');
+                });
             },
             500
         );

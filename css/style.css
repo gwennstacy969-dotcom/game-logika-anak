@@ -38,9 +38,7 @@ html, body {
 #game-container {
     width: 100vw;
     height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block; /* Phaser autoCenter handles the centering */
     background: linear-gradient(135deg, #0f0e17 0%, #1a1a2e 50%, #16213e 100%);
 
     /* touch-action pada container + canvas agar Phaser tangkap semua touch */
