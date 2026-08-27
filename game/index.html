@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <!-- ============================================
+         Game Logika & Matematika Dasar
+         Untuk anak usia 4-7 tahun
+         ============================================ -->
+    <meta charset="UTF-8">
+    
+    <!-- SEO & Meta -->
+    <title>Logika & Matematika Dasar — Game Edukasi Anak</title>
+    <meta name="description" content="Game edukasi interaktif untuk anak usia 4-7 tahun. Belajar logika dan matematika dasar melalui permainan drag-and-drop yang menyenangkan.">
+    <meta name="keywords" content="game edukasi, anak, logika, matematika, belajar, drag and drop">
+    <meta name="author" content="Game Logika Anak">
+
+    <!-- Viewport untuk mobile (WAJIB) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- Mencegah telephone number detection di mobile -->
+    <meta name="format-detection" content="telephone=no">
+    
+    <!-- PWA / Mobile Web App -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Logika Anak">
+    
+    <!-- Theme color untuk browser mobile -->
+    <meta name="theme-color" content="#667eea">
+
+    <!-- Favicon (emoji fallback) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧩</text></svg>">
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Loading Screen (ditampilkan sebelum Phaser selesai load) -->
+    <div id="loading-screen">
+        <h1>🧩 Logika Anak</h1>
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Pesan rotasi untuk HP dalam mode portrait -->
+    <div id="rotate-message">
+        <div class="rotate-icon">📱🔄</div>
+        <p>Putar HP kamu<br>ke posisi mendatar ya! 🌈</p>
+    </div>
+
+    <!-- Container utama game (Phaser canvas akan di-inject di sini) -->
+    <div id="game-container"></div>
+
+    <!-- ============================================
+         PHASER 3 ENGINE (via CDN)
+         ============================================ -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+
+    <!-- ============================================
+         GAME SCRIPTS (ES Modules)
+         ============================================ -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
