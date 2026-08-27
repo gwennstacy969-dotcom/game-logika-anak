@@ -1,0 +1,44 @@
+# ============================================
+# .gitignore — Game Logika & Matematika Dasar
+# ============================================
+
+# --- Dependencies ---
+node_modules/
+vendor/
+package-lock.json
+
+# --- Environment ---
+.env
+.env.local
+.env.*.local
+
+# --- OS Files ---
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+*.lnk
+
+# --- IDE / Editor ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# --- Build Output ---
+dist/
+build/
+*.min.js
+*.min.css
+
+# --- PHP ---
+*.log
+error_log
+
+# --- Temporary ---
+*.tmp
+*.bak
+*.cache

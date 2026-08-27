@@ -1,0 +1,24 @@
+# ============================================
+# .htaccess — Backend API
+# Game Logika & Matematika Dasar
+# ============================================
+
+# --- CORS Headers ---
+# Mengizinkan akses dari game frontend (sesuaikan origin di production)
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization"
+    Header set Content-Type "application/json; charset=UTF-8"
+</IfModule>
+
+# --- Handle preflight OPTIONS request ---
+RewriteEngine On
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^(.*)$ $1 [R=200,L]
+
+# --- Deny access ke file konfigurasi ---
+<FilesMatch "^(database\.php|\.env)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
