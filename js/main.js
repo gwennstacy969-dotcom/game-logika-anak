@@ -20,21 +20,20 @@ import { ColorMatchScene } from './scenes/ColorMatchScene.js';
 const config = {
     // --- Renderer ---
     type: Phaser.AUTO,  // Otomatis pilih WebGL atau Canvas
-    resolution: window.devicePixelRatio || 1, // HD untuk layar retina/high-DPI
 
     // --- Scale Manager ---
-    // Mengatur agar game responsif di semua ukuran layar
+    // Mengatur agar game responsif di semua ukuran layar & orientasi
     scale: {
-        mode: Phaser.Scale.FIT,             // Fit ke container, pertahankan aspect ratio
-        autoCenter: Phaser.Scale.CENTER_BOTH, // Tengah horizontal & vertikal
-        width: 1280,                         // Lebar desain basis (px)
-        height: 720,                         // Tinggi desain basis (px)
-        parent: 'game-container',            // ID elemen HTML container
+        mode: Phaser.Scale.FIT,               // Fit ke container, pertahankan aspect ratio
+        autoCenter: Phaser.Scale.CENTER_BOTH,  // Tengah horizontal & vertikal
+        width: 1280,                           // Lebar desain basis (px)
+        height: 720,                           // Tinggi desain basis (px)
+        parent: 'game-container',              // ID elemen HTML container
 
-        // Batas minimum (HP kecil)
+        // Batas minimum (HP kecil portrait)
         min: {
-            width: 480,
-            height: 270
+            width: 320,
+            height: 240
         },
         // Batas maximum (monitor besar)
         max: {
@@ -92,17 +91,37 @@ if (screen.orientation && screen.orientation.lock) {
 }
 
 // --- Sembunyikan loading screen HTML saat game sudah siap ---
-window.addEventListener('load', () => {
+// Strategi berlapis agar tidak stuck loading:
+// 1. Game 'ready' event (paling cepat)
+// 2. window.load (fallback jika ready sudah lewat)
+// 3. Hard timeout 6 detik (fallback terakhir)
+
+function hideLoadingScreen() {
     const loadingScreen = document.getElementById('loading-screen');
-    if (loadingScreen) {
-        // Delay sedikit agar transisi smooth
+    if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
+        loadingScreen.classList.add('hidden');
         setTimeout(() => {
-            loadingScreen.classList.add('hidden');
-            // Hapus dari DOM setelah animasi selesai
-            setTimeout(() => loadingScreen.remove(), 500);
-        }, 300);
+            if (loadingScreen.parentNode) loadingScreen.remove();
+        }, 600);
     }
+}
+
+// Strategi 1: Saat Phaser game instance siap
+game.events.once('ready', () => {
+    setTimeout(hideLoadingScreen, 200);
 });
+
+// Strategi 2: window.load (untuk kasus CDN cepat selesai sebelum listener terpasang)
+if (document.readyState === 'complete') {
+    setTimeout(hideLoadingScreen, 400);
+} else {
+    window.addEventListener('load', () => {
+        setTimeout(hideLoadingScreen, 400);
+    });
+}
+
+// Strategi 3: Hard timeout — pastikan tidak stuck lebih dari 6 detik
+setTimeout(hideLoadingScreen, 6000);
 
 // --- Prevent context menu pada game canvas (klik kanan) ---
 document.addEventListener('contextmenu', (e) => {

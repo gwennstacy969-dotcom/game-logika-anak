@@ -39,21 +39,20 @@
     <div id="loading-screen">
         <h1>🧩 Logika Anak</h1>
         <div class="spinner"></div>
+        <p class="loading-sub">Memuat game...</p>
     </div>
 
-    <!-- Pesan rotasi untuk HP dalam mode portrait -->
-    <div id="rotate-message">
-        <div class="rotate-icon">📱🔄</div>
-        <p>Putar HP kamu<br>ke posisi mendatar ya! 🌈</p>
-    </div>
+    <!-- Pesan rotasi — dinonaktifkan, game support semua orientasi -->
+    <div id="rotate-message" style="display:none!important"></div>
 
     <!-- Container utama game (Phaser canvas akan di-inject di sini) -->
     <div id="game-container"></div>
 
     <!-- ============================================
-         PHASER 3 ENGINE (via CDN)
+         PHASER 3 ENGINE (file lokal — tidak perlu internet)
          ============================================ -->
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <!-- Phaser disimpan lokal agar load lebih cepat (tidak butuh internet) -->
+    <script src="js/lib/phaser.min.js"></script>
 
     <!-- ============================================
          GAME SCRIPTS (ES Modules)
