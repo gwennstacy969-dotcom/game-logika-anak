@@ -1,5 +1,7 @@
 import { StarCounter } from '../ui/StarCounter.js';
 import { FeedbackPopup } from '../ui/FeedbackPopup.js';
+import { Confetti } from '../utils/Confetti.js';
+import { ApiClient } from '../utils/ApiClient.js';
 
 export class CountingScene extends Phaser.Scene {
     constructor() {
@@ -20,6 +22,7 @@ export class CountingScene extends Phaser.Scene {
 
         this.audioManager = this.registry.get('audioManager');
         this.feedbackPopup = new FeedbackPopup(this);
+        this.apiClient = new ApiClient();
 
         this._createBackground(width, height);
         this._createHeader(width, height);
@@ -190,7 +193,7 @@ export class CountingScene extends Phaser.Scene {
         gameObject.y = by;
         gameObject.setScale(0);
         
-        if (this.audioManager) this.audioManager.playSuccess();
+        if (this.audioManager) this.audioManager.playCorrect();
         
         this.starCount++;
         this.starCounter.addStar(this.starCount);
@@ -213,7 +216,7 @@ export class CountingScene extends Phaser.Scene {
     }
 
     _handleWrong(gameObject) {
-        if (this.audioManager) this.audioManager.playError();
+        if (this.audioManager) this.audioManager.playWrong();
         this.tweens.add({
             targets: gameObject,
             x: gameObject.originalX,
@@ -226,21 +229,32 @@ export class CountingScene extends Phaser.Scene {
         this.tweens.add({ targets: cross, alpha: 0, y: cross.y - 50, duration: 800, onComplete: () => cross.destroy()});
     }
 
-    _finishLevel() {
+    async _finishLevel() {
         this.levelCompleted = true;
-        if (this.audioManager) this.audioManager.playCheer();
-        this.feedbackPopup.show(
-            this.starCount, 
-            this.totalRounds, 
-            () => {
+        if (this.audioManager) this.audioManager.playCelebrate();
+        
+        Confetti.burst(this, this.cameras.main.centerX, this.cameras.main.centerY);
+        
+        // Simpan skor
+        const currentProfile = this.registry.get('currentProfile');
+        const profilId = currentProfile ? currentProfile.id : 0;
+        const nama = currentProfile ? currentProfile.nama : 'Tamu';
+        
+        try {
+            await this.apiClient.saveScore(nama, 'counting_1', this.starCount, profilId);
+        } catch (e) {
+            console.error('Gagal menyimpan skor:', e);
+        }
+
+        this.time.delayedCall(500, () => {
+            this.feedbackPopup.showLevelComplete();
+            // Fallback for custom popup finish
+            this.time.delayedCall(3000, () => {
                 this.cameras.main.fadeOut(500);
                 this.cameras.main.once('camerafadeoutcomplete', () => {
                     this.scene.start('MenuScene');
                 });
-            },
-            () => {
-                this.scene.restart();
-            }
-        );
+            });
+        });
     }
 }

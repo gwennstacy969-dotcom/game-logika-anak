@@ -9,6 +9,7 @@
  * Base Resolution: 1280×720 (16:9 landscape)
  */
 import { BootScene } from './scenes/BootScene.js';
+import { ProfileScene } from './scenes/ProfileScene.js';
 import { MenuScene } from './scenes/MenuScene.js';
 import { ShapeSortScene } from './scenes/ShapeSortScene.js';
 import { CountingScene } from './scenes/CountingScene.js';
@@ -48,8 +49,8 @@ const config = {
     backgroundColor: '#0f0e17',
 
     // --- Scene Registration ---
-    // Urutan: BootScene → MenuScene → ShapeSortScene → CountingScene → ColorMatchScene
-    scene: [BootScene, MenuScene, ShapeSortScene, CountingScene, ColorMatchScene],
+    // Urutan: BootScene → ProfileScene → MenuScene → ShapeSortScene → CountingScene → ColorMatchScene
+    scene: [BootScene, ProfileScene, MenuScene, ShapeSortScene, CountingScene, ColorMatchScene],
 
     // --- Input Configuration ---
     input: {

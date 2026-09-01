@@ -19,6 +19,7 @@ import { DropZone } from '../objects/DropZone.js';
 import { StarCounter } from '../ui/StarCounter.js';
 import { FeedbackPopup } from '../ui/FeedbackPopup.js';
 import { ApiClient } from '../utils/ApiClient.js';
+import { Confetti } from '../utils/Confetti.js';
 
 export class ShapeSortScene extends Phaser.Scene {
 
@@ -390,6 +391,7 @@ export class ShapeSortScene extends Phaser.Scene {
 
         // 2. Confetti rain!
         this._createConfettiRain();
+        Confetti.burst(this, this.cameras.main.centerX, this.cameras.main.centerY);
 
         // 3. Popup celebration besar
         this.time.delayedCall(300, () => {
@@ -408,14 +410,17 @@ export class ShapeSortScene extends Phaser.Scene {
      * Kirim skor ke backend PHP via API.
      */
     async _submitScore() {
-        const playerName = this.registry.get('playerName') || 'Anak';
+        const currentProfile = this.registry.get('currentProfile');
+        const profilId = currentProfile ? currentProfile.id : 0;
+        const playerName = currentProfile ? currentProfile.nama : 'Anak';
         const levelId = 'shape_sort_1';
 
         try {
             const result = await this.apiClient.saveScore(
                 playerName,
                 levelId,
-                this.starCount
+                this.starCount,
+                profilId
             );
 
             if (result.success) {
