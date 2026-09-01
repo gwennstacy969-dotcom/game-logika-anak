@@ -78,7 +78,7 @@ export class BootScene extends Phaser.Scene {
 
         // Loading bar fill
         const barFill = this.add.graphics();
-        
+
         // Progress event dari Phaser loader
         this.load.on('progress', (value) => {
             barFill.clear();

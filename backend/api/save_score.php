@@ -9,6 +9,7 @@
  * 
  * Request Body:
  * {
+ *   "profil_id": 1,
  *   "nama_anak": "Andi",
  *   "level_id": "shape_sort_1",
  *   "jumlah_bintang": 4
@@ -58,7 +59,7 @@ if ($data === null) {
 }
 
 // Validasi field yang wajib ada
-$requiredFields = ['nama_anak', 'level_id', 'jumlah_bintang'];
+$requiredFields = ['profil_id', 'nama_anak', 'level_id', 'jumlah_bintang'];
 $missingFields = [];
 
 foreach ($requiredFields as $field) {
@@ -77,6 +78,7 @@ if (!empty($missingFields)) {
 }
 
 // Sanitasi & validasi tipe data
+$profilId      = (int) $data['profil_id'];
 $namaAnak      = trim(htmlspecialchars($data['nama_anak'], ENT_QUOTES, 'UTF-8'));
 $levelId       = trim(htmlspecialchars($data['level_id'], ENT_QUOTES, 'UTF-8'));
 $jumlahBintang = (int) $data['jumlah_bintang'];
@@ -105,11 +107,12 @@ if ($jumlahBintang < 0 || $jumlahBintang > 10) {
 try {
     $pdo = getDBConnection();
 
-    $sql = "INSERT INTO skor_anak (nama_anak, level_id, jumlah_bintang) 
-            VALUES (:nama_anak, :level_id, :jumlah_bintang)";
+    $sql = "INSERT INTO skor_anak (profil_id, nama_anak, level_id, jumlah_bintang) 
+            VALUES (:profil_id, :nama_anak, :level_id, :jumlah_bintang)";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
+        ':profil_id'      => $profilId,
         ':nama_anak'      => $namaAnak,
         ':level_id'       => $levelId,
         ':jumlah_bintang' => $jumlahBintang
