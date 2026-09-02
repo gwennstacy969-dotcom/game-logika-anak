@@ -34,6 +34,9 @@ export class MenuScene extends Phaser.Scene {
         // --- Tombol Level ---
         this._createLevelButtons(width, height);
 
+        // --- Maskot Interaktif ---
+        this._createMascot(width, height);
+
         // Audio diinisialisasi di dalam handler tombol/input
         // agar tidak mencuri klik pertama dari user.
     }
@@ -145,74 +148,144 @@ export class MenuScene extends Phaser.Scene {
         });
     }
 
-    /**
-     * Tombol-tombol level yang tersedia.
-     */
     _createLevelButtons(width, height) {
         // --- Tombol Level 1: Mencocokkan Bentuk ---
         this._createButton(
-            width / 2, 420,
+            width / 2, 380,
             '🧩 Mencocokkan Bentuk',
             'Drag & letakkan bentuk ke tempatnya!',
-            0x4ECB71,      // Hijau
-            0x3DAF5C,      // Hijau hover
-            () => {
-                const audioManager = this.registry.get('audioManager');
-                if (audioManager) {
-                    audioManager.init();
-                    audioManager.playPop();
-                }
-
-                // Transisi ke ShapeSortScene
-                this.cameras.main.fadeOut(400, 0, 0, 0);
-                this.cameras.main.once('camerafadeoutcomplete', () => {
-                    this.scene.start('ShapeSortScene');
-                });
-            },
-            200  // Delay animasi
+            0x4ECB71, 0x3DAF5C,
+            () => { this._startGame('ShapeSortScene'); },
+            100
         );
 
         // --- Tombol Level 2: Menghitung Objek ---
         this._createButton(
-            width / 2, 540,
+            width / 2, 470,
             '🔢 Menghitung Objek',
             'Hitung benda dan pilih angkanya!',
-            0x4A90D9,      // Biru
-            0x3A80C9,
-            () => {
-                const audioManager = this.registry.get('audioManager');
-                if (audioManager) {
-                    audioManager.init();
-                    audioManager.playPop();
-                }
-                this.cameras.main.fadeOut(400, 0, 0, 0);
-                this.cameras.main.once('camerafadeoutcomplete', () => {
-                    this.scene.start('CountingScene');
-                });
-            },
-            400
+            0x4A90D9, 0x3A80C9,
+            () => { this._startGame('CountingScene'); },
+            200
         );
 
         // --- Tombol Level 3: Mengenal Warna ---
         this._createButton(
-            width / 2, 630,
+            width / 2, 560,
             '🎨 Mengenal Warna',
             'Kelompokkan benda sesuai warnanya!',
-            0xFFB03B,      // Kuning-Oranye
-            0xEFA02B,
-            () => {
-                const audioManager = this.registry.get('audioManager');
-                if (audioManager) {
-                    audioManager.init();
-                    audioManager.playPop();
-                }
-                this.cameras.main.fadeOut(400, 0, 0, 0);
-                this.cameras.main.once('camerafadeoutcomplete', () => {
-                    this.scene.start('ColorMatchScene');
-                });
-            },
+            0xFFB03B, 0xEFA02B,
+            () => { this._startGame('ColorMatchScene'); },
+            300
+        );
+
+        // --- Tombol Level 4: Kartu Memori ---
+        this._createButton(
+            width / 2, 650,
+            '🃏 Kartu Memori',
+            'Temukan pasangan gambar yang sama!',
+            0x9B59B6, 0x8E44AD,
+            () => { this._startGame('MemoryScene'); },
+            400
+        );
+
+        // --- Tombol Level 5: Tebak Pola ---
+        this._createButton(
+            width / 2, 740,
+            '🔄 Tebak Pola',
+            'Lengkapi urutan polanya!',
+            0xE74C3C, 0xC0392B,
+            () => { this._startGame('PatternScene'); },
             500
         );
+    }
+
+    _startGame(sceneKey) {
+        const audioManager = this.registry.get('audioManager');
+        if (audioManager) {
+            audioManager.init();
+            audioManager.playPop();
+        }
+        this.cameras.main.fadeOut(400, 0, 0, 0);
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+            this.scene.start(sceneKey);
+        });
+    }
+
+    _createMascot(width, height) {
+        // Mascot (Owl)
+        const mascot = this.add.text(60, height - 80, '🦉', { fontSize: '80px' }).setOrigin(0.5);
+        mascot.setInteractive({ useHandCursor: true });
+        
+        // Animasi bernapas (breathing)
+        this.tweens.add({
+            targets: mascot,
+            scaleY: 1.05,
+            y: mascot.y - 10,
+            duration: 1200,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        // Bubble Chat
+        const bubble = this.add.container(130, height - 140);
+        const bg = this.add.graphics();
+        bg.fillStyle(0xffffff, 1);
+        bg.fillRoundedRect(0, 0, 160, 50, 15);
+        
+        // Panah bubble
+        bg.beginPath();
+        bg.moveTo(10, 50);
+        bg.lineTo(20, 65);
+        bg.lineTo(30, 50);
+        bg.fillPath();
+
+        const msg = this.add.text(80, 25, 'Ayo Bermain!', {
+            fontFamily: 'Nunito, sans-serif',
+            fontSize: '18px',
+            fontStyle: 'bold',
+            color: '#333'
+        }).setOrigin(0.5);
+
+        bubble.add([bg, msg]);
+        bubble.setAlpha(0);
+        bubble.setScale(0);
+
+        mascot.on('pointerdown', () => {
+            const audioManager = this.registry.get('audioManager');
+            if (audioManager) {
+                audioManager.init();
+                audioManager.playPop();
+            }
+
+            // Animasi lompat maskot
+            this.tweens.add({
+                targets: mascot,
+                y: mascot.y - 40,
+                duration: 150,
+                yoyo: true,
+                ease: 'Power1'
+            });
+
+            // Tampilkan bubble
+            bubble.setAlpha(1);
+            bubble.setScale(1);
+            
+            // Ubah teks bubble secara acak
+            const chats = ['Halo!', 'Semangat!', 'Kamu Pintar!', 'Ayo Bermain!'];
+            msg.setText(Phaser.Math.RND.pick(chats));
+
+            this.tweens.add({
+                targets: bubble,
+                y: height - 160,
+                alpha: 0,
+                duration: 2000,
+                delay: 1000,
+                ease: 'Sine.easeIn',
+                onComplete: () => { bubble.y = height - 140; }
+            });
+        });
     }
 
     /**
