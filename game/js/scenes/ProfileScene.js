@@ -68,19 +68,32 @@ export class ProfileScene extends Phaser.Scene {
             const y = this.cameras.main.centerY;
 
             // Simple box for profile
-            const box = this.add.rectangle(x, y, 150, 150, 0xffffff, 0.2)
+            const box = this.add.rectangle(x, y, 180, 220, 0xffffff, 0.2)
                 .setInteractive({ useHandCursor: true })
                 .on('pointerover', () => box.setFillStyle(0xffffff, 0.4))
                 .on('pointerout', () => box.setFillStyle(0xffffff, 0.2))
                 .on('pointerdown', () => this.selectProfile(profile));
 
-            const name = this.add.text(x, y, profile.nama, {
+            const name = this.add.text(x, y - 40, profile.nama, {
                 fontFamily: 'Fredoka One, Arial',
                 fontSize: '32px',
                 fill: '#ffffff'
             }).setOrigin(0.5);
 
-            this.profileContainer.add([box, name]);
+            // Render Achievements
+            const key = `achievements_${profile.id || profile.nama}`;
+            const achievements = JSON.parse(localStorage.getItem(key) || '[]');
+            let achText = achievements.length > 0 ? `🏆 ${achievements.length} Piala` : 'Belum ada piala';
+            
+            const pialaText = this.add.text(x, y + 30, achText, {
+                fontFamily: 'Nunito, Arial',
+                fontSize: '18px',
+                fill: '#FFD700',
+                stroke: '#000000',
+                strokeThickness: 2
+            }).setOrigin(0.5);
+
+            this.profileContainer.add([box, name, pialaText]);
         });
 
         // Add Create Profile button (Simplified for now - just uses Guest)
