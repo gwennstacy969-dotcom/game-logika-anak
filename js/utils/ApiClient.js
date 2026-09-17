@@ -44,9 +44,10 @@ export class ApiClient {
      * const result = await api.saveScore('Andi', 'shape_sort_1', 4);
      * console.log(result); // { success: true, message: '...', id: 1 }
      */
-    async saveScore(namaAnak, levelId, jumlahBintang) {
+    async saveScore(namaAnak, levelId, jumlahBintang, profilId = 0) {
         const url = `${this.baseUrl}/save_score.php`;
         const payload = {
+            profil_id: profilId,
             nama_anak: namaAnak,
             level_id: levelId,
             jumlah_bintang: jumlahBintang

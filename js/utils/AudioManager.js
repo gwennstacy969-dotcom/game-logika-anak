@@ -23,6 +23,9 @@ export class AudioManager {
         this.unlocked = false;
         /** @type {number} Volume master (0-1) */
         this.masterVolume = 0.4;
+        /** @type {boolean} Apakah BGM sedang main */
+        this.isBGMPlaying = false;
+        this.bgmTimeout = null;
     }
 
     /**
@@ -129,5 +132,46 @@ export class AudioManager {
      */
     playPop() {
         this._playTone(660, 0.08, 0, 'sine', 0.2);
+    }
+
+    /**
+     * 🎶 Play Background Music (BGM) loop sederhana
+     */
+    playBGM() {
+        if (this.isBGMPlaying) return;
+        this._ensureContext();
+        this.isBGMPlaying = true;
+        this._loopBGM();
+    }
+
+    stopBGM() {
+        this.isBGMPlaying = false;
+        if(this.bgmTimeout) clearTimeout(this.bgmTimeout);
+    }
+
+    _loopBGM() {
+        if (!this.isBGMPlaying) return;
+
+        // Twinkle Twinkle Little Star melody (first line)
+        const melody = [
+            { f: 261.63, d: 0.4 }, // C4
+            { f: 261.63, d: 0.4 }, // C4
+            { f: 392.00, d: 0.4 }, // G4
+            { f: 392.00, d: 0.4 }, // G4
+            { f: 440.00, d: 0.4 }, // A4
+            { f: 440.00, d: 0.4 }, // A4
+            { f: 392.00, d: 0.8 }, // G4
+        ];
+
+        let timeOffset = 0;
+        melody.forEach(note => {
+            this._playTone(note.f, note.d - 0.05, timeOffset, 'triangle', 0.1);
+            timeOffset += note.d;
+        });
+
+        // Repeat after melody finishes
+        this.bgmTimeout = setTimeout(() => {
+            this._loopBGM();
+        }, timeOffset * 1000);
     }
 }

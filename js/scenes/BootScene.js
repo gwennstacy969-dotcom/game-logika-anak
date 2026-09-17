@@ -5,7 +5,7 @@
  * 
  * Scene pertama yang ditampilkan saat game dimuat.
  * Menampilkan animasi loading yang menyenangkan,
- * lalu otomatis pindah ke MenuScene.
+ * lalu otomatis pindah ke ProfileScene.
  * 
  * Karena semua grafik digambar secara programatis
  * dan audio dihasilkan via Web Audio API, scene ini
@@ -36,7 +36,7 @@ export class BootScene extends Phaser.Scene {
     }
 
     /**
-     * Create: inisialisasi game systems dan transisi ke menu.
+     * Create: inisialisasi game systems dan transisi ke ProfileScene.
      */
     create() {
         // --- Inisialisasi Audio Manager ---
@@ -78,7 +78,7 @@ export class BootScene extends Phaser.Scene {
 
         // Loading bar fill
         const barFill = this.add.graphics();
-        
+
         // Progress event dari Phaser loader
         this.load.on('progress', (value) => {
             barFill.clear();
@@ -102,7 +102,7 @@ export class BootScene extends Phaser.Scene {
     }
 
     /**
-     * Tampilkan splash screen dengan animasi sebelum ke menu.
+     * Tampilkan splash screen dengan animasi sebelum ke ProfileScene.
      */
     _showSplashScreen() {
         const width = this.cameras.main.width;
@@ -165,12 +165,12 @@ export class BootScene extends Phaser.Scene {
             ease: 'Sine.easeOut'
         });
 
-        // --- Transisi ke Menu setelah 2 detik ---
+        // --- Transisi ke ProfileScene setelah 2 detik ---
         this.time.delayedCall(2500, () => {
             // Fade out semua
             this.cameras.main.fadeOut(500, 0, 0, 0);
             this.cameras.main.once('camerafadeoutcomplete', () => {
-                this.scene.start('MenuScene');
+                this.scene.start('ProfileScene');
             });
         });
     }

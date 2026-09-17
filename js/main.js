@@ -9,10 +9,16 @@
  * Base Resolution: 1280×720 (16:9 landscape)
  */
 import { BootScene } from './scenes/BootScene.js';
+import { ProfileScene } from './scenes/ProfileScene.js';
 import { MenuScene } from './scenes/MenuScene.js';
 import { ShapeSortScene } from './scenes/ShapeSortScene.js';
 import { CountingScene } from './scenes/CountingScene.js';
 import { ColorMatchScene } from './scenes/ColorMatchScene.js';
+import { MemoryScene } from './scenes/MemoryScene.js';
+import { PatternScene } from './scenes/PatternScene.js';
+import { CodingScene } from './scenes/CodingScene.js';
+import { MazeScene } from './scenes/MazeScene.js';
+import { NumberCatchScene } from './scenes/NumberCatchScene.js';
 
 // ============================================
 // PHASER GAME CONFIGURATION
@@ -20,20 +26,21 @@ import { ColorMatchScene } from './scenes/ColorMatchScene.js';
 const config = {
     // --- Renderer ---
     type: Phaser.AUTO,  // Otomatis pilih WebGL atau Canvas
+    resolution: window.devicePixelRatio || 1, // Render HD untuk layar retina/high-DPI
 
     // --- Scale Manager ---
-    // Mengatur agar game responsif di semua ukuran layar & orientasi
+    // Mengatur agar game responsif di semua ukuran layar
     scale: {
-        mode: Phaser.Scale.FIT,               // Fit ke container, pertahankan aspect ratio
-        autoCenter: Phaser.Scale.CENTER_BOTH,  // Tengah horizontal & vertikal
-        width: 1280,                           // Lebar desain basis (px)
-        height: 720,                           // Tinggi desain basis (px)
-        parent: 'game-container',              // ID elemen HTML container
+        mode: Phaser.Scale.FIT,             // Fit ke container, pertahankan aspect ratio
+        autoCenter: Phaser.Scale.CENTER_BOTH, // Tengah horizontal & vertikal
+        width: 1280,                         // Lebar desain basis (px)
+        height: 720,                         // Tinggi desain basis (px)
+        parent: 'game-container',            // ID elemen HTML container
 
-        // Batas minimum (HP kecil portrait)
+        // Batas minimum (HP kecil)
         min: {
-            width: 320,
-            height: 240
+            width: 480,
+            height: 270
         },
         // Batas maximum (monitor besar)
         max: {
@@ -47,8 +54,8 @@ const config = {
     backgroundColor: '#0f0e17',
 
     // --- Scene Registration ---
-    // Urutan: BootScene → MenuScene → ShapeSortScene → CountingScene → ColorMatchScene
-    scene: [BootScene, MenuScene, ShapeSortScene, CountingScene, ColorMatchScene],
+    // Urutan: BootScene → ProfileScene → MenuScene → ShapeSortScene → CountingScene → ColorMatchScene → MemoryScene → PatternScene → CodingScene → MazeScene → NumberCatchScene
+    scene: [BootScene, ProfileScene, MenuScene, ShapeSortScene, CountingScene, ColorMatchScene, MemoryScene, PatternScene, CodingScene, MazeScene, NumberCatchScene],
 
     // --- Input Configuration ---
     input: {
@@ -91,37 +98,17 @@ if (screen.orientation && screen.orientation.lock) {
 }
 
 // --- Sembunyikan loading screen HTML saat game sudah siap ---
-// Strategi berlapis agar tidak stuck loading:
-// 1. Game 'ready' event (paling cepat)
-// 2. window.load (fallback jika ready sudah lewat)
-// 3. Hard timeout 6 detik (fallback terakhir)
-
-function hideLoadingScreen() {
+window.addEventListener('load', () => {
     const loadingScreen = document.getElementById('loading-screen');
-    if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
-        loadingScreen.classList.add('hidden');
+    if (loadingScreen) {
+        // Delay sedikit agar transisi smooth
         setTimeout(() => {
-            if (loadingScreen.parentNode) loadingScreen.remove();
-        }, 600);
+            loadingScreen.classList.add('hidden');
+            // Hapus dari DOM setelah animasi selesai
+            setTimeout(() => loadingScreen.remove(), 500);
+        }, 300);
     }
-}
-
-// Strategi 1: Saat Phaser game instance siap
-game.events.once('ready', () => {
-    setTimeout(hideLoadingScreen, 200);
 });
-
-// Strategi 2: window.load (untuk kasus CDN cepat selesai sebelum listener terpasang)
-if (document.readyState === 'complete') {
-    setTimeout(hideLoadingScreen, 400);
-} else {
-    window.addEventListener('load', () => {
-        setTimeout(hideLoadingScreen, 400);
-    });
-}
-
-// Strategi 3: Hard timeout — pastikan tidak stuck lebih dari 6 detik
-setTimeout(hideLoadingScreen, 6000);
 
 // --- Prevent context menu pada game canvas (klik kanan) ---
 document.addEventListener('contextmenu', (e) => {

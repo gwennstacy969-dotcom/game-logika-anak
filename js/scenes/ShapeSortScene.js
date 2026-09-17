@@ -19,6 +19,7 @@ import { DropZone } from '../objects/DropZone.js';
 import { StarCounter } from '../ui/StarCounter.js';
 import { FeedbackPopup } from '../ui/FeedbackPopup.js';
 import { ApiClient } from '../utils/ApiClient.js';
+import { Confetti } from '../utils/Confetti.js';
 
 export class ShapeSortScene extends Phaser.Scene {
 
@@ -390,6 +391,7 @@ export class ShapeSortScene extends Phaser.Scene {
 
         // 2. Confetti rain!
         this._createConfettiRain();
+        Confetti.burst(this, this.cameras.main.centerX, this.cameras.main.centerY);
 
         // 3. Popup celebration besar
         this.time.delayedCall(300, () => {
@@ -408,14 +410,17 @@ export class ShapeSortScene extends Phaser.Scene {
      * Kirim skor ke backend PHP via API.
      */
     async _submitScore() {
-        const playerName = this.registry.get('playerName') || 'Anak';
+        const currentProfile = this.registry.get('currentProfile');
+        const profilId = currentProfile ? currentProfile.id : 0;
+        const playerName = currentProfile ? currentProfile.nama : 'Anak';
         const levelId = 'shape_sort_1';
 
         try {
             const result = await this.apiClient.saveScore(
                 playerName,
                 levelId,
-                this.starCount
+                this.starCount,
+                profilId
             );
 
             if (result.success) {
@@ -569,51 +574,32 @@ export class ShapeSortScene extends Phaser.Scene {
      * Tombol kembali ke menu.
      */
     _createBackButton(width, height) {
-        const btnContainer = this.add.container(60, height - 35);
-        btnContainer.setDepth(200);
-
-        // Background
-        const bg = this.add.graphics();
-        bg.fillStyle(0x000000, 0.3);
-        bg.fillRoundedRect(-45, -18, 90, 36, 18);
-        btnContainer.add(bg);
-
-        // Label
-        const label = this.add.text(0, 0, '◀ Menu', {
-            fontFamily: 'Nunito, sans-serif',
-            fontSize: '16px',
-            fontStyle: 'bold',
-            color: '#ffffffcc'
-        }).setOrigin(0.5);
-        btnContainer.add(label);
-
-        // FIX: Set interactive pada container langsung
-        btnContainer.setSize(100, 44);
-        btnContainer.setInteractive(
-            new Phaser.Geom.Rectangle(-50, -22, 100, 44),
-            Phaser.Geom.Rectangle.Contains
-        );
-
-        btnContainer.on('pointerover', () => {
-            label.setStyle({ color: '#ffffff' });
-            bg.clear();
-            bg.fillStyle(0x000000, 0.5);
-            bg.fillRoundedRect(-45, -18, 90, 36, 18);
-        });
-
-        btnContainer.on('pointerout', () => {
-            label.setStyle({ color: '#ffffffcc' });
-            bg.clear();
-            bg.fillStyle(0x000000, 0.3);
-            bg.fillRoundedRect(-45, -18, 90, 36, 18);
-        });
-
-        btnContainer.on('pointerdown', () => {
-            if (this.audioManager) this.audioManager.playPop();
-            this.cameras.main.fadeOut(300, 0, 0, 0);
+        const backBtn = this.add.container(60, 50);
+        const backBg = this.add.graphics();
+        backBg.fillStyle(0xffffff, 0.15);
+        backBg.fillRoundedRect(-30, -20, 60, 40, 10);
+        backBg.lineStyle(2, 0xffffff, 0.5);
+        backBg.strokeRoundedRect(-30, -20, 60, 40, 10);
+        const backText = this.add.text(0, 0, '⬅️', { fontSize: '24px' }).setOrigin(0.5);
+        backBtn.add([backBg, backText]);
+        backBtn.setSize(60, 40);
+        backBtn.setInteractive({ useHandCursor: true }).setDepth(200);
+        
+        backBtn.on('pointerdown', () => {
+            const audioManager = this.registry.get('audioManager');
+            if (audioManager) audioManager.playPop();
+            this.cameras.main.fadeOut(300);
             this.cameras.main.once('camerafadeoutcomplete', () => {
                 this.scene.start('MenuScene');
             });
         });
+        
+        backBtn.on('pointerover', () => {
+            this.tweens.add({ targets: backBtn, scale: 1.1, duration: 100 });
+        });
+        backBtn.on('pointerout', () => {
+            this.tweens.add({ targets: backBtn, scale: 1, duration: 100 });
+        });
     }
+
 }

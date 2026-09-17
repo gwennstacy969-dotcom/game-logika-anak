@@ -1,16 +1,13 @@
 /**
  * ============================================
- * MenuScene — Menu Utama Game
+ * MenuScene — Menu Utama Game (Premium Edition)
  * ============================================
- *
- * Tampilan menu utama dengan layout responsif:
- * - Judul game besar dan colorful
- * - Input nama anak (opsional)
- * - Tombol besar untuk mulai bermain
- * - Background animasi dekoratif
- *
- * FIX: Semua posisi menggunakan persentase dari ukuran canvas
- *      sehingga tampilan pas di mobile portrait, landscape, & desktop.
+ * 
+ * Tampilan menu utama dengan:
+ * - Layout Grid 2 kolom untuk memuat lebih banyak game
+ * - Efek Glassmorphism (semi-transparan, modern)
+ * - Latar belakang partikel interaktif
+ * - Tombol-tombol dengan glow dan bounce animation
  */
 export class MenuScene extends Phaser.Scene {
 
@@ -21,11 +18,11 @@ export class MenuScene extends Phaser.Scene {
     create() {
         const { width, height } = this.cameras.main;
 
-        // Fade in dari BootScene
+        // Fade in
         this.cameras.main.fadeIn(500);
 
         // --- Background ---
-        this._createBackground(width, height);
+        this._createPremiumBackground(width, height);
 
         // --- Judul Game ---
         this._createTitle(width, height);
@@ -33,131 +30,153 @@ export class MenuScene extends Phaser.Scene {
         // --- Input Nama Anak ---
         this._createNameInput(width, height);
 
-        // --- Tombol Level ---
-        this._createLevelButtons(width, height);
+        // --- Container Scroll/Grid ---
+        this._createGameGrid(width, height);
 
-        // --- Handle resize (orientasi berubah di mobile) ---
-        this.scale.on('resize', this._onResize, this);
+        // --- Maskot Interaktif ---
+        this._createMascot(width, height);
     }
 
-    /**
-     * Saat layar di-resize, restart scene agar layout
-     * dihitung ulang sesuai ukuran baru.
-     */
-    _onResize() {
-        this.scale.off('resize', this._onResize, this);
-        // Beri jeda agar Phaser selesai menghitung ukuran baru
-        this.time.delayedCall(100, () => {
-            this.scene.restart();
-        });
-    }
-
-    /**
-     * Background gradient dengan bentuk dekoratif.
-     */
-    _createBackground(width, height) {
+    _createPremiumBackground(width, height) {
+        // Gradient animated di CSS, di sini kita buat transparan atau subtle dark overlay
         const bg = this.add.graphics();
-        bg.fillGradientStyle(0x667eea, 0x764ba2, 0x667eea, 0x764ba2, 1);
+        bg.fillStyle(0x000000, 0.2); 
         bg.fillRect(0, 0, width, height);
 
-        // Lingkaran dekoratif besar (soft)
-        const deco = this.add.graphics();
-        deco.fillStyle(0xffffff, 0.03);
-        deco.fillCircle(width * 0.85, height * 0.2, Math.min(width, height) * 0.25);
-        deco.fillCircle(width * 0.1, height * 0.8, Math.min(width, height) * 0.18);
-        deco.fillCircle(width * 0.5, height * 0.95, Math.min(width, height) * 0.12);
+        // Glowing Orbs (Soft Lights)
+        this.orb1 = this.add.circle(width * 0.1, height * 0.2, 200, 0x667eea, 0.4);
+        this.orb2 = this.add.circle(width * 0.9, height * 0.8, 250, 0xff758c, 0.4);
+        this.orb1.setBlendMode(Phaser.BlendModes.ADD);
+        this.orb2.setBlendMode(Phaser.BlendModes.ADD);
 
-        this._addFloatingDecorations(width, height);
+        // Animate orbs
+        this.tweens.add({
+            targets: this.orb1,
+            x: width * 0.3,
+            y: height * 0.4,
+            duration: 8000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+        
+        this.tweens.add({
+            targets: this.orb2,
+            x: width * 0.7,
+            y: height * 0.5,
+            duration: 10000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        // Particles
+        this._createParticles(width, height);
     }
 
-    /**
-     * Judul game — ukuran font responsif terhadap lebar canvas.
-     */
+    _createParticles(width, height) {
+        // Gunakan phaser particle manager
+        const particles = this.add.particles(0, 0, 'particle', {
+            x: { min: 0, max: width },
+            y: { min: height, max: height + 100 },
+            lifespan: { min: 4000, max: 8000 },
+            speedY: { min: -20, max: -60 },
+            scale: { start: 0.5, end: 0 },
+            quantity: 2,
+            blendMode: 'ADD'
+        });
+        
+        // Coba buat texture partikel on the fly jika tidak ada gambar
+        if (!this.textures.exists('glow_particle')) {
+            const g = this.add.graphics();
+            g.fillStyle(0xffffff, 1);
+            g.fillCircle(8, 8, 8);
+            g.generateTexture('glow_particle', 16, 16);
+            g.destroy();
+        }
+        
+        particles.setTexture('glow_particle');
+        particles.setAlpha(0.3);
+    }
+
     _createTitle(width, height) {
-        const isPortrait = height > width;
-
-        // Ukuran font dinamis
-        const emojiFontSize  = Math.max(24, Math.min(52, width * 0.045)) + 'px';
-        const titleFontSize  = Math.max(20, Math.min(48, width * 0.038)) + 'px';
-        const subtitleFontSize = Math.max(13, Math.min(22, width * 0.018)) + 'px';
-
-        // Posisi Y responsif: 10% teratas untuk judul
-        const titleY      = height * (isPortrait ? 0.10 : 0.12);
-        const emojiY      = titleY - height * 0.07;
-        const subtitleY   = titleY + height * 0.07;
-
-        const emoji = this.add.text(width / 2, emojiY, '🧩🔢🌟', {
-            fontSize: emojiFontSize
-        }).setOrigin(0.5).setAlpha(0);
-
-        const title = this.add.text(width / 2, titleY, 'Logika & Matematika', {
+        // Judul utama dengan efek Glow / Shadow
+        const title = this.add.text(width / 2, 80, '🌟 Logika & Matematika 🌟', {
             fontFamily: 'Nunito, sans-serif',
-            fontSize: titleFontSize,
-            fontStyle: 'bold',
+            fontSize: '52px',
+            fontStyle: '900',
             color: '#ffffff',
             align: 'center',
-            stroke: '#000000',
-            strokeThickness: 3,
-            shadow: { offsetY: 3, color: '#00000044', blur: 6, fill: true }
+            stroke: '#2a0845',
+            strokeThickness: 8,
+            shadow: { offsetX: 0, offsetY: 5, color: '#00000088', blur: 10, fill: true }
         }).setOrigin(0.5).setScale(0);
 
-        const subtitle = this.add.text(width / 2, subtitleY, 'Untuk Usia 4–7 Tahun', {
+        // Subjudul
+        const subtitle = this.add.text(width / 2, 140, 'Petualangan Cerdas Usia 4-7 Tahun', {
             fontFamily: 'Nunito, sans-serif',
-            fontSize: subtitleFontSize,
-            color: '#ffffffaa',
-            align: 'center'
+            fontSize: '24px',
+            fontWeight: '700',
+            color: '#FFD700', // Gold color
+            align: 'center',
+            shadow: { offsetX: 0, offsetY: 2, color: '#000000', blur: 4, fill: true }
         }).setOrigin(0.5).setAlpha(0);
 
-        this.tweens.add({ targets: emoji,    alpha: 1,            duration: 400, delay: 100, ease: 'Sine.easeOut' });
-        this.tweens.add({ targets: title,    scaleX: 1, scaleY: 1, duration: 500, delay: 200, ease: 'Back.easeOut' });
-        this.tweens.add({ targets: subtitle, alpha: 1,            duration: 400, delay: 500, ease: 'Sine.easeOut' });
+        // Animasi masuk
+        this.tweens.add({ targets: title, scaleX: 1, scaleY: 1, duration: 800, ease: 'Elastic.easeOut' });
+        this.tweens.add({ targets: subtitle, alpha: 1, y: 135, duration: 600, delay: 400, ease: 'Sine.easeOut' });
     }
 
-    /**
-     * Input field nama anak — posisi adaptif.
-     */
     _createNameInput(width, height) {
-        const isPortrait = height > width;
+        const y = 220;
 
-        // Zona input ada di sekitar 28% tinggi (portrait) atau 27% (landscape)
-        const centerY    = height * (isPortrait ? 0.30 : 0.28);
-        const inputW     = Math.min(280, width * 0.55);
-        const inputH     = 44;
-        const labelSize  = Math.max(13, Math.min(20, width * 0.016)) + 'px';
-        const inputSize  = Math.max(12, Math.min(17, width * 0.014)) + 'px';
+        // Glassmorphism Input Field
+        const inputBg = this.add.graphics();
+        inputBg.fillStyle(0xffffff, 0.1); // Semi transparent
+        inputBg.fillRoundedRect(width / 2 - 150, y, 300, 50, 25);
+        inputBg.lineStyle(2, 0xffffff, 0.5); // Solid border
+        inputBg.strokeRoundedRect(width / 2 - 150, y, 300, 50, 25);
 
-        this.add.text(width / 2, centerY - 26, '👶 Siapa nama kamu?', {
+        // Teks input 
+        let currentName = this.registry.get('playerName') || 'Siapa namamu?';
+        let prefix = this.registry.get('playerName') ? '👤 ' : '✏️ ';
+
+        this.nameText = this.add.text(width / 2, y + 25, prefix + currentName, {
             fontFamily: 'Nunito, sans-serif',
-            fontSize: labelSize,
-            fontStyle: 'bold',
+            fontSize: '20px',
+            fontWeight: 'bold',
             color: '#ffffff',
             align: 'center'
         }).setOrigin(0.5);
 
-        const inputBg = this.add.graphics();
-        inputBg.fillStyle(0xffffff, 0.15);
-        inputBg.fillRoundedRect(width / 2 - inputW / 2, centerY - inputH / 2, inputW, inputH, 22);
-        inputBg.lineStyle(2, 0xffffff, 0.3);
-        inputBg.strokeRoundedRect(width / 2 - inputW / 2, centerY - inputH / 2, inputW, inputH, 22);
-
-        this.nameText = this.add.text(width / 2, centerY, '✏️ Ketuk untuk isi nama', {
-            fontFamily: 'Nunito, sans-serif',
-            fontSize: inputSize,
-            color: '#ffffffaa',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        const inputZone = this.add.zone(width / 2, centerY, inputW, inputH)
+        // Interaktif
+        const inputZone = this.add.zone(width / 2, y + 25, 300, 50)
             .setInteractive({ useHandCursor: true });
 
-        inputZone.on('pointerdown', () => {
-            const name = prompt('Masukkan nama anak:',
-                this.registry.get('playerName') || 'Anak');
+        // Hover effect
+        inputZone.on('pointerover', () => {
+            inputBg.clear();
+            inputBg.fillStyle(0xffffff, 0.2); 
+            inputBg.fillRoundedRect(width / 2 - 150, y, 300, 50, 25);
+            inputBg.lineStyle(2, 0xffffff, 0.8); 
+            inputBg.strokeRoundedRect(width / 2 - 150, y, 300, 50, 25);
+        });
 
+        inputZone.on('pointerout', () => {
+            inputBg.clear();
+            inputBg.fillStyle(0xffffff, 0.1); 
+            inputBg.fillRoundedRect(width / 2 - 150, y, 300, 50, 25);
+            inputBg.lineStyle(2, 0xffffff, 0.5); 
+            inputBg.strokeRoundedRect(width / 2 - 150, y, 300, 50, 25);
+        });
+
+        inputZone.on('pointerdown', () => {
+            const name = prompt('Masukkan nama anak hebat:', 
+                this.registry.get('playerName') || '');
+            
             if (name && name.trim() !== '') {
                 this.registry.set('playerName', name.trim());
                 this.nameText.setText(`👤 ${name.trim()}`);
-                this.nameText.setStyle({ color: '#ffffff' });
             }
 
             const audioManager = this.registry.get('audioManager');
@@ -165,122 +184,140 @@ export class MenuScene extends Phaser.Scene {
         });
     }
 
-    /**
-     * Tombol-tombol level — diatur secara vertikal dengan spasi proporsional.
-     */
-    _createLevelButtons(width, height) {
-        const isPortrait = height > width;
+    _createGameGrid(width, height) {
+        // Setup Grid 2 Kolom untuk 7 game
+        const startY = 340;
+        const col1X = width / 2 - 220;
+        const col2X = width / 2 + 220;
+        const rowHeight = 90;
 
-        // Lebar tombol responsif (maks 400px, min 55% layar)
-        const btnWidth  = Math.min(400, Math.max(width * 0.55, 220));
-        const btnHeight = Math.min(78, Math.max(height * 0.09, 52));
-
-        // Ukuran font responsif
-        const labelSize = Math.max(14, Math.min(22, width * 0.018)) + 'px';
-        const descSize  = Math.max(10, Math.min(14, width * 0.012)) + 'px';
-
-        // Posisi vertikal tombol pertama: 42% ke bawah (portrait) atau 40% (landscape)
-        const startY  = height * (isPortrait ? 0.44 : 0.40);
-        const spacing = btnHeight + Math.max(14, height * 0.035);
-
-        const buttons = [
-            {
-                label: '🧩 Mencocokkan Bentuk',
-                desc:  'Drag & letakkan bentuk ke tempatnya!',
-                color: 0x4ECB71, hover: 0x3DAF5C,
-                scene: 'ShapeSortScene'
-            },
-            {
-                label: '🔢 Menghitung Objek',
-                desc:  'Hitung benda dan pilih angkanya! (5 ronde)',
-                color: 0x4A90D9, hover: 0x3A80C9,
-                scene: 'CountingScene'
-            },
-            {
-                label: '🎨 Mengenal Warna',
-                desc:  'Kelompokkan benda sesuai warnanya! (3 tahap)',
-                color: 0xFFB03B, hover: 0xEFA02B,
-                scene: 'ColorMatchScene'
-            }
+        const games = [
+            { id: 'ShapeSortScene', title: '🧩 Cocok Bentuk', desc: 'Seret bentuk ke tempatnya!', color: 0x4ECB71 },
+            { id: 'CountingScene', title: '🔢 Berhitung', desc: 'Hitung benda & pilih angka', color: 0x4A90D9 },
+            { id: 'ColorMatchScene', title: '🎨 Warna Warni', desc: 'Kelompokkan benda', color: 0xFFB03B },
+            { id: 'MemoryScene', title: '🃏 Kartu Memori', desc: 'Cari pasangan gambar', color: 0x9B59B6 },
+            { id: 'PatternScene', title: '🔄 Tebak Pola', desc: 'Lengkapi urutan', color: 0xE74C3C },
+            { id: 'CodingScene', title: '🤖 Robot Coding', desc: 'Program jalan robot', color: 0x00CEC9 },
+            { id: 'MazeScene', title: '🗺️ Labirin Pintar', desc: 'Cari jalan keluar', color: 0xFD79A8 },
+            { id: 'NumberCatchScene', title: '🎈 Tangkap Angka', desc: 'Pecahkan balon (Baru!)', color: 0x0984E3 }
         ];
 
-        buttons.forEach((btn, i) => {
-            const y = startY + i * spacing;
-            this._createButton(
-                width / 2, y,
-                btn.label, btn.desc,
-                btn.color, btn.hover,
-                btnWidth, btnHeight,
-                labelSize, descSize,
-                () => {
-                    const audioManager = this.registry.get('audioManager');
-                    if (audioManager) { audioManager.init(); audioManager.playPop?.(); }
-                    this.cameras.main.fadeOut(400, 0, 0, 0);
-                    this.cameras.main.once('camerafadeoutcomplete', () => {
-                        this.scene.start(btn.scene);
-                    });
-                },
-                i * 150  // stagger delay
+        games.forEach((game, index) => {
+            // Tentukan kolom dan baris
+            const col = index % 2 === 0 ? col1X : col2X;
+            const row = startY + Math.floor(index / 2) * rowHeight;
+            
+            // Jika ganjil dan ini item terakhir, taruh di tengah
+            let xPos = col;
+            if (index === games.length - 1 && games.length % 2 !== 0) {
+                xPos = width / 2;
+            }
+
+            this._createGlassButton(
+                xPos, row, 
+                game.title, game.desc, 
+                game.color, 
+                () => { this._startGame(game.id); },
+                index * 100 // Delay animasi beruntun
             );
         });
     }
 
+    _startGame(sceneKey) {
+        const audioManager = this.registry.get('audioManager');
+        if (audioManager) {
+            audioManager.init();
+            audioManager.playPop();
+        }
+        
+        // Transisi mewah
+        this.cameras.main.fadeOut(500, 255, 255, 255);
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+            this.scene.start(sceneKey);
+        });
+    }
+
     /**
-     * Helper: buat satu tombol interaktif responsif.
+     * Tombol Glassmorphism Baru
      */
-    _createButton(x, y, label, desc, color, hoverColor, btnWidth, btnHeight, labelSize, descSize, onClick, delay = 0) {
+    _createGlassButton(x, y, label, desc, color, onClick, delay = 0) {
+        const btnWidth = 400;
+        const btnHeight = 75;
+
         const container = this.add.container(x, y);
-        container.setScale(0);
-        container.setDepth(10);
+        container.setScale(0); // Mulai dari scale 0 untuk animasi masuk
 
+        // --- Base Glow Background (Solid Color, tapi ada di layer bawah) ---
+        const glow = this.add.graphics();
+        glow.fillStyle(color, 0.4);
+        glow.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 20);
+        
+        // --- Glass overlay ---
         const bg = this.add.graphics();
+        bg.fillStyle(0xffffff, 0.15); 
+        bg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 20);
+        // Border
+        bg.lineStyle(2, 0xffffff, 0.6);
+        bg.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 20);
 
-        const drawBg = (fillColor, borderAlpha) => {
-            bg.clear();
-            bg.fillStyle(fillColor, 1);
-            bg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 18);
-            bg.lineStyle(2, 0xffffff, borderAlpha);
-            bg.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 18);
-        };
+        container.add([glow, bg]);
 
-        drawBg(color, 0.15);
-        container.add(bg);
-
-        const labelText = this.add.text(0, -btnHeight * 0.14, label, {
+        // --- Teks ---
+        const labelText = this.add.text(0, -12, label, {
             fontFamily: 'Nunito, sans-serif',
-            fontSize: labelSize,
-            fontStyle: 'bold',
+            fontSize: '24px',
+            fontWeight: '900',
             color: '#ffffff',
-            align: 'center'
+            align: 'center',
+            shadow: { offsetX: 1, offsetY: 2, color: '#00000088', blur: 3, fill: true }
         }).setOrigin(0.5);
-        container.add(labelText);
 
-        const descText = this.add.text(0, btnHeight * 0.22, desc, {
+        const descText = this.add.text(0, 15, desc, {
             fontFamily: 'Nunito, sans-serif',
-            fontSize: descSize,
-            color: '#ffffffaa',
+            fontSize: '15px',
+            fontWeight: '600',
+            color: '#ffffffee',
             align: 'center'
         }).setOrigin(0.5);
-        container.add(descText);
 
-        container.setSize(btnWidth + 20, btnHeight + 20);
+        container.add([labelText, descText]);
+
+        // --- Hit Area ---
+        container.setSize(btnWidth, btnHeight);
         container.setInteractive({
-            hitArea: new Phaser.Geom.Rectangle(
-                -(btnWidth + 20) / 2, -(btnHeight + 20) / 2,
-                btnWidth + 20, btnHeight + 20
-            ),
+            hitArea: new Phaser.Geom.Rectangle(-btnWidth/2, -btnHeight/2, btnWidth, btnHeight),
             hitAreaCallback: Phaser.Geom.Rectangle.Contains,
             useHandCursor: true
         });
 
+        // --- Interaksi ---
+        const redrawGlow = (alpha, scale) => {
+            glow.clear();
+            glow.fillStyle(color, alpha);
+            // Bikin glow sedikit lebih besar saat hover
+            glow.fillRoundedRect((-btnWidth/2) - scale, (-btnHeight/2) - scale, btnWidth + (scale*2), btnHeight + (scale*2), 20);
+        };
+
         container.on('pointerover', () => {
-            drawBg(hoverColor, 0.3);
-            this.tweens.add({ targets: container, scaleX: 1.05, scaleY: 1.05, duration: 100, ease: 'Sine.easeOut' });
+            redrawGlow(0.7, 5);
+            this.tweens.add({
+                targets: container,
+                scaleX: 1.05,
+                scaleY: 1.05,
+                duration: 150,
+                ease: 'Back.easeOut'
+            });
         });
 
         container.on('pointerout', () => {
-            drawBg(color, 0.15);
-            this.tweens.add({ targets: container, scaleX: 1.0, scaleY: 1.0, duration: 100, ease: 'Sine.easeOut' });
+            redrawGlow(0.4, 0);
+            this.tweens.add({
+                targets: container,
+                scaleX: 1.0,
+                scaleY: 1.0,
+                duration: 150,
+                ease: 'Sine.easeOut'
+            });
         });
 
         container.on('pointerdown', () => {
@@ -289,53 +326,104 @@ export class MenuScene extends Phaser.Scene {
 
             this.tweens.add({
                 targets: container,
-                scaleX: 0.95, scaleY: 0.95,
-                duration: 80, yoyo: true,
-                ease: 'Sine.easeInOut'
+                scaleX: 0.9,
+                scaleY: 0.9,
+                duration: 100,
+                yoyo: true,
+                ease: 'Sine.easeInOut',
+                onComplete: () => {
+                    if (onClick) onClick();
+                }
             });
-
-            if (onClick) onClick();
         });
 
-        // Animasi masuk
+        // --- Animasi Masuk berurutan ---
         this.tweens.add({
             targets: container,
-            scaleX: 1, scaleY: 1,
-            duration: 400,
+            scaleX: 1,
+            scaleY: 1,
+            duration: 500,
             delay: delay,
             ease: 'Back.easeOut'
         });
     }
 
-    /**
-     * Dekorasi melayang di background.
-     */
-    _addFloatingDecorations(width, height) {
-        const shapes = ['●', '▲', '■', '★', '♦'];
-        const colors = ['#FF6B35', '#4ECB71', '#4A90D9', '#FFD93D', '#E84393'];
+    _createMascot(width, height) {
+        // Mascot (Owl) dipindah agak ke kiri bawah
+        const mascot = this.add.text(80, height - 90, '🦉', { fontSize: '90px' }).setOrigin(0.5);
+        mascot.setInteractive({ useHandCursor: true });
+        
+        // Animasi bernapas (breathing) yang lebih bouncy
+        this.tweens.add({
+            targets: mascot,
+            scaleX: 1.05,
+            scaleY: 0.95,
+            duration: 800,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
 
-        for (let i = 0; i < 8; i++) {
-            const shape = Phaser.Math.RND.pick(shapes);
-            const color = Phaser.Math.RND.pick(colors);
-            const x = Phaser.Math.Between(30, width - 30);
-            const y = Phaser.Math.Between(30, height - 30);
-            const size = Math.max(18, Math.min(40, width * 0.03));
+        // Bubble Chat (Glassmorphism style)
+        const bubble = this.add.container(170, height - 150);
+        
+        const bg = this.add.graphics();
+        bg.fillStyle(0xffffff, 0.85); // Putih agak solid agar teks terbaca
+        bg.fillRoundedRect(0, 0, 180, 60, 20);
+        bg.lineStyle(2, 0xffffff, 1);
+        bg.strokeRoundedRect(0, 0, 180, 60, 20);
+        
+        // Panah bubble ke arah maskot
+        bg.beginPath();
+        bg.moveTo(10, 60);
+        bg.lineTo(15, 80);
+        bg.lineTo(35, 60);
+        bg.fillPath();
 
-            const text = this.add.text(x, y, shape, {
-                fontSize: `${Phaser.Math.Between(Math.round(size * 0.7), size)}px`,
-                color: color
-            }).setOrigin(0.5).setAlpha(0.12);
+        const msg = this.add.text(90, 30, 'Klik Aku!', {
+            fontFamily: 'Nunito, sans-serif',
+            fontSize: '18px',
+            fontWeight: 'bold',
+            color: '#333333'
+        }).setOrigin(0.5);
+
+        bubble.add([bg, msg]);
+        bubble.setAlpha(0);
+        bubble.setScale(0);
+
+        mascot.on('pointerdown', () => {
+            const audioManager = this.registry.get('audioManager');
+            if (audioManager) {
+                audioManager.init();
+                audioManager.playPop();
+            }
+
+            // Animasi lompat maskot (squash & stretch)
+            this.tweens.chain({
+                targets: mascot,
+                tweens: [
+                    { scaleY: 0.8, scaleX: 1.2, duration: 100 },
+                    { y: mascot.y - 60, scaleY: 1.1, scaleX: 0.9, duration: 200, ease: 'Power2' },
+                    { y: mascot.y, scaleY: 0.9, scaleX: 1.1, duration: 200, ease: 'Bounce.easeOut' },
+                    { scaleY: 1, scaleX: 1, duration: 100 }
+                ]
+            });
+
+            bubble.setAlpha(1);
+            bubble.setScale(1);
+            
+            const chats = ['Halo teman!', 'Semangat!', 'Kamu Hebat!', 'Ayo Belajar!', 'Wah, Seru!'];
+            msg.setText(Phaser.Math.RND.pick(chats));
 
             this.tweens.add({
-                targets: text,
-                y: y - Phaser.Math.Between(15, 35),
-                alpha: { from: 0.08, to: 0.18 },
-                duration: Phaser.Math.Between(3000, 5000),
-                yoyo: true,
-                repeat: -1,
-                ease: 'Sine.easeInOut',
-                delay: Phaser.Math.Between(0, 2000)
+                targets: bubble,
+                y: height - 170,
+                alpha: 0,
+                duration: 2000,
+                delay: 1500,
+                ease: 'Sine.easeIn',
+                onComplete: () => { bubble.y = height - 150; }
             });
-        }
+        });
     }
 }
