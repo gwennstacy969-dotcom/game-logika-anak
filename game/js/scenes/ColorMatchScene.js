@@ -64,21 +64,31 @@ export class ColorMatchScene extends Phaser.Scene {
     }
 
     _createBackButton(width, height) {
-        const backBtn = this.add.text(40, 40, '◀ Kembali', {
-            fontFamily: 'Nunito, sans-serif',
-            fontSize: '20px',
-            fontStyle: 'bold',
-            color: '#ffffff',
-            backgroundColor: '#00000044',
-            padding: { x: 15, y: 10 }
-        }).setOrigin(0, 0.5).setInteractive({ useHandCursor: true }).setDepth(100);
-
+        const backBtn = this.add.container(60, 50);
+        const backBg = this.add.graphics();
+        backBg.fillStyle(0xffffff, 0.15);
+        backBg.fillRoundedRect(-30, -20, 60, 40, 10);
+        backBg.lineStyle(2, 0xffffff, 0.5);
+        backBg.strokeRoundedRect(-30, -20, 60, 40, 10);
+        const backText = this.add.text(0, 0, '⬅️', { fontSize: '24px' }).setOrigin(0.5);
+        backBtn.add([backBg, backText]);
+        backBtn.setSize(60, 40);
+        backBtn.setInteractive({ useHandCursor: true }).setDepth(200);
+        
         backBtn.on('pointerdown', () => {
-            if (this.audioManager) this.audioManager.playPop();
+            const audioManager = this.registry.get('audioManager');
+            if (audioManager) audioManager.playPop();
             this.cameras.main.fadeOut(300);
             this.cameras.main.once('camerafadeoutcomplete', () => {
                 this.scene.start('MenuScene');
             });
+        });
+        
+        backBtn.on('pointerover', () => {
+            this.tweens.add({ targets: backBtn, scale: 1.1, duration: 100 });
+        });
+        backBtn.on('pointerout', () => {
+            this.tweens.add({ targets: backBtn, scale: 1, duration: 100 });
         });
     }
 

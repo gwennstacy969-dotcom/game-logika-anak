@@ -1,14 +1,13 @@
 /**
  * ============================================
- * MenuScene — Menu Utama Game
+ * MenuScene — Menu Utama Game (Premium Edition)
  * ============================================
  * 
  * Tampilan menu utama dengan:
- * - Judul game besar dan colorful
- * - Input nama anak (opsional)
- * - Tombol besar untuk mulai bermain
- * - Pilihan level (untuk sekarang hanya Shape Sorting)
- * - Background animasi dekoratif
+ * - Layout Grid 2 kolom untuk memuat lebih banyak game
+ * - Efek Glassmorphism (semi-transparan, modern)
+ * - Latar belakang partikel interaktif
+ * - Tombol-tombol dengan glow dan bounce animation
  */
 export class MenuScene extends Phaser.Scene {
 
@@ -19,11 +18,11 @@ export class MenuScene extends Phaser.Scene {
     create() {
         const { width, height } = this.cameras.main;
 
-        // Fade in dari BootScene
+        // Fade in
         this.cameras.main.fadeIn(500);
 
         // --- Background ---
-        this._createBackground(width, height);
+        this._createPremiumBackground(width, height);
 
         // --- Judul Game ---
         this._createTitle(width, height);
@@ -31,173 +30,196 @@ export class MenuScene extends Phaser.Scene {
         // --- Input Nama Anak ---
         this._createNameInput(width, height);
 
-        // --- Tombol Level ---
-        this._createLevelButtons(width, height);
+        // --- Container Scroll/Grid ---
+        this._createGameGrid(width, height);
 
         // --- Maskot Interaktif ---
         this._createMascot(width, height);
-
-        // Audio diinisialisasi di dalam handler tombol/input
-        // agar tidak mencuri klik pertama dari user.
     }
 
-    /**
-     * Background gradient dengan bentuk dekoratif.
-     */
-    _createBackground(width, height) {
-        // Gradient utama
+    _createPremiumBackground(width, height) {
+        // Gradient animated di CSS, di sini kita buat transparan atau subtle dark overlay
         const bg = this.add.graphics();
-        bg.fillGradientStyle(0x667eea, 0x764ba2, 0x667eea, 0x764ba2, 1);
+        bg.fillStyle(0x000000, 0.2); 
         bg.fillRect(0, 0, width, height);
 
-        // Lingkaran dekoratif besar (soft)
-        const deco = this.add.graphics();
-        deco.fillStyle(0xffffff, 0.03);
-        deco.fillCircle(width * 0.85, height * 0.2, 200);
-        deco.fillCircle(width * 0.1, height * 0.8, 150);
-        deco.fillCircle(width * 0.5, height * 0.9, 100);
+        // Glowing Orbs (Soft Lights)
+        this.orb1 = this.add.circle(width * 0.1, height * 0.2, 200, 0x667eea, 0.4);
+        this.orb2 = this.add.circle(width * 0.9, height * 0.8, 250, 0xff758c, 0.4);
+        this.orb1.setBlendMode(Phaser.BlendModes.ADD);
+        this.orb2.setBlendMode(Phaser.BlendModes.ADD);
 
-        // Bentuk-bentuk kecil melayang
-        this._addFloatingDecorations(width, height);
+        // Animate orbs
+        this.tweens.add({
+            targets: this.orb1,
+            x: width * 0.3,
+            y: height * 0.4,
+            duration: 8000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+        
+        this.tweens.add({
+            targets: this.orb2,
+            x: width * 0.7,
+            y: height * 0.5,
+            duration: 10000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        // Particles
+        this._createParticles(width, height);
     }
 
-    /**
-     * Judul game dengan animasi masuk.
-     */
-    _createTitle(width, height) {
-        // Emoji dekoratif
-        const emoji = this.add.text(width / 2, 80, '🧩🔢🌟', {
-            fontSize: '48px'
-        }).setOrigin(0.5).setAlpha(0);
+    _createParticles(width, height) {
+        // Gunakan phaser particle manager
+        const particles = this.add.particles(0, 0, 'particle', {
+            x: { min: 0, max: width },
+            y: { min: height, max: height + 100 },
+            lifespan: { min: 4000, max: 8000 },
+            speedY: { min: -20, max: -60 },
+            scale: { start: 0.5, end: 0 },
+            quantity: 2,
+            blendMode: 'ADD'
+        });
+        
+        // Coba buat texture partikel on the fly jika tidak ada gambar
+        if (!this.textures.exists('glow_particle')) {
+            const g = this.add.graphics();
+            g.fillStyle(0xffffff, 1);
+            g.fillCircle(8, 8, 8);
+            g.generateTexture('glow_particle', 16, 16);
+            g.destroy();
+        }
+        
+        particles.setTexture('glow_particle');
+        particles.setAlpha(0.3);
+    }
 
-        // Judul utama
-        const title = this.add.text(width / 2, 145, 'Logika & Matematika', {
+    _createTitle(width, height) {
+        // Judul utama dengan efek Glow / Shadow
+        const title = this.add.text(width / 2, 80, '🌟 Logika & Matematika 🌟', {
             fontFamily: 'Nunito, sans-serif',
-            fontSize: '46px',
-            fontStyle: 'bold',
+            fontSize: '52px',
+            fontStyle: '900',
             color: '#ffffff',
             align: 'center',
-            stroke: '#000000',
-            strokeThickness: 4,
-            shadow: { offsetY: 3, color: '#00000044', blur: 6, fill: true }
+            stroke: '#2a0845',
+            strokeThickness: 8,
+            shadow: { offsetX: 0, offsetY: 5, color: '#00000088', blur: 10, fill: true }
         }).setOrigin(0.5).setScale(0);
 
         // Subjudul
-        const subtitle = this.add.text(width / 2, 195, 'Untuk Usia 4-7 Tahun', {
+        const subtitle = this.add.text(width / 2, 140, 'Petualangan Cerdas Usia 4-7 Tahun', {
             fontFamily: 'Nunito, sans-serif',
-            fontSize: '20px',
-            color: '#ffffffaa',
-            align: 'center'
+            fontSize: '24px',
+            fontWeight: '700',
+            color: '#FFD700', // Gold color
+            align: 'center',
+            shadow: { offsetX: 0, offsetY: 2, color: '#000000', blur: 4, fill: true }
         }).setOrigin(0.5).setAlpha(0);
 
         // Animasi masuk
-        this.tweens.add({ targets: emoji, alpha: 1, duration: 400, delay: 100, ease: 'Sine.easeOut' });
-        this.tweens.add({ targets: title, scaleX: 1, scaleY: 1, duration: 500, delay: 200, ease: 'Back.easeOut' });
-        this.tweens.add({ targets: subtitle, alpha: 1, duration: 400, delay: 500, ease: 'Sine.easeOut' });
+        this.tweens.add({ targets: title, scaleX: 1, scaleY: 1, duration: 800, ease: 'Elastic.easeOut' });
+        this.tweens.add({ targets: subtitle, alpha: 1, y: 135, duration: 600, delay: 400, ease: 'Sine.easeOut' });
     }
 
-    /**
-     * Input field untuk nama anak.
-     * Menggunakan Phaser text + DOM element.
-     */
     _createNameInput(width, height) {
-        const y = 280;
+        const y = 220;
 
-        // Label
-        this.add.text(width / 2, y - 25, '👶 Siapa nama kamu?', {
+        // Glassmorphism Input Field
+        const inputBg = this.add.graphics();
+        inputBg.fillStyle(0xffffff, 0.1); // Semi transparent
+        inputBg.fillRoundedRect(width / 2 - 150, y, 300, 50, 25);
+        inputBg.lineStyle(2, 0xffffff, 0.5); // Solid border
+        inputBg.strokeRoundedRect(width / 2 - 150, y, 300, 50, 25);
+
+        // Teks input 
+        let currentName = this.registry.get('playerName') || 'Siapa namamu?';
+        let prefix = this.registry.get('playerName') ? '👤 ' : '✏️ ';
+
+        this.nameText = this.add.text(width / 2, y + 25, prefix + currentName, {
             fontFamily: 'Nunito, sans-serif',
             fontSize: '20px',
-            fontStyle: 'bold',
+            fontWeight: 'bold',
             color: '#ffffff',
             align: 'center'
         }).setOrigin(0.5);
 
-        // Input field background
-        const inputBg = this.add.graphics();
-        inputBg.fillStyle(0xffffff, 0.15);
-        inputBg.fillRoundedRect(width / 2 - 130, y, 260, 45, 22);
-        inputBg.lineStyle(2, 0xffffff, 0.3);
-        inputBg.strokeRoundedRect(width / 2 - 130, y, 260, 45, 22);
-
-        // Teks input (simulasi — klik untuk mengganti nama)
-        this.nameText = this.add.text(width / 2, y + 22, '✏️ Ketuk untuk isi nama', {
-            fontFamily: 'Nunito, sans-serif',
-            fontSize: '16px',
-            color: '#ffffffaa',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        // Buat area klik
-        const inputZone = this.add.zone(width / 2, y + 22, 260, 45)
+        // Interaktif
+        const inputZone = this.add.zone(width / 2, y + 25, 300, 50)
             .setInteractive({ useHandCursor: true });
 
+        // Hover effect
+        inputZone.on('pointerover', () => {
+            inputBg.clear();
+            inputBg.fillStyle(0xffffff, 0.2); 
+            inputBg.fillRoundedRect(width / 2 - 150, y, 300, 50, 25);
+            inputBg.lineStyle(2, 0xffffff, 0.8); 
+            inputBg.strokeRoundedRect(width / 2 - 150, y, 300, 50, 25);
+        });
+
+        inputZone.on('pointerout', () => {
+            inputBg.clear();
+            inputBg.fillStyle(0xffffff, 0.1); 
+            inputBg.fillRoundedRect(width / 2 - 150, y, 300, 50, 25);
+            inputBg.lineStyle(2, 0xffffff, 0.5); 
+            inputBg.strokeRoundedRect(width / 2 - 150, y, 300, 50, 25);
+        });
+
         inputZone.on('pointerdown', () => {
-            // Gunakan prompt browser untuk input nama (paling kompatibel)
-            const name = prompt('Masukkan nama anak:', 
-                this.registry.get('playerName') || 'Anak');
+            const name = prompt('Masukkan nama anak hebat:', 
+                this.registry.get('playerName') || '');
             
             if (name && name.trim() !== '') {
                 this.registry.set('playerName', name.trim());
                 this.nameText.setText(`👤 ${name.trim()}`);
-                this.nameText.setStyle({ color: '#ffffff' });
             }
 
-            // Init audio saat interaksi
             const audioManager = this.registry.get('audioManager');
             if (audioManager) audioManager.init();
         });
     }
 
-    _createLevelButtons(width, height) {
-        // --- Tombol Level 1: Mencocokkan Bentuk ---
-        this._createButton(
-            width / 2, 380,
-            '🧩 Mencocokkan Bentuk',
-            'Drag & letakkan bentuk ke tempatnya!',
-            0x4ECB71, 0x3DAF5C,
-            () => { this._startGame('ShapeSortScene'); },
-            100
-        );
+    _createGameGrid(width, height) {
+        // Setup Grid 2 Kolom untuk 7 game
+        const startY = 340;
+        const col1X = width / 2 - 220;
+        const col2X = width / 2 + 220;
+        const rowHeight = 90;
 
-        // --- Tombol Level 2: Menghitung Objek ---
-        this._createButton(
-            width / 2, 470,
-            '🔢 Menghitung Objek',
-            'Hitung benda dan pilih angkanya!',
-            0x4A90D9, 0x3A80C9,
-            () => { this._startGame('CountingScene'); },
-            200
-        );
+        const games = [
+            { id: 'ShapeSortScene', title: '🧩 Cocok Bentuk', desc: 'Seret bentuk ke tempatnya!', color: 0x4ECB71 },
+            { id: 'CountingScene', title: '🔢 Berhitung', desc: 'Hitung benda & pilih angka', color: 0x4A90D9 },
+            { id: 'ColorMatchScene', title: '🎨 Warna Warni', desc: 'Kelompokkan benda', color: 0xFFB03B },
+            { id: 'MemoryScene', title: '🃏 Kartu Memori', desc: 'Cari pasangan gambar', color: 0x9B59B6 },
+            { id: 'PatternScene', title: '🔄 Tebak Pola', desc: 'Lengkapi urutan', color: 0xE74C3C },
+            { id: 'CodingScene', title: '🤖 Robot Coding', desc: 'Program jalan robot (Baru!)', color: 0x00CEC9 },
+            { id: 'MazeScene', title: '🗺️ Labirin Pintar', desc: 'Cari jalan keluar (Baru!)', color: 0xFD79A8 }
+        ];
 
-        // --- Tombol Level 3: Mengenal Warna ---
-        this._createButton(
-            width / 2, 560,
-            '🎨 Mengenal Warna',
-            'Kelompokkan benda sesuai warnanya!',
-            0xFFB03B, 0xEFA02B,
-            () => { this._startGame('ColorMatchScene'); },
-            300
-        );
+        games.forEach((game, index) => {
+            // Tentukan kolom dan baris
+            const col = index % 2 === 0 ? col1X : col2X;
+            const row = startY + Math.floor(index / 2) * rowHeight;
+            
+            // Jika ganjil dan ini item terakhir, taruh di tengah
+            let xPos = col;
+            if (index === games.length - 1 && games.length % 2 !== 0) {
+                xPos = width / 2;
+            }
 
-        // --- Tombol Level 4: Kartu Memori ---
-        this._createButton(
-            width / 2, 650,
-            '🃏 Kartu Memori',
-            'Temukan pasangan gambar yang sama!',
-            0x9B59B6, 0x8E44AD,
-            () => { this._startGame('MemoryScene'); },
-            400
-        );
-
-        // --- Tombol Level 5: Tebak Pola ---
-        this._createButton(
-            width / 2, 740,
-            '🔄 Tebak Pola',
-            'Lengkapi urutan polanya!',
-            0xE74C3C, 0xC0392B,
-            () => { this._startGame('PatternScene'); },
-            500
-        );
+            this._createGlassButton(
+                xPos, row, 
+                game.title, game.desc, 
+                game.color, 
+                () => { this._startGame(game.id); },
+                index * 100 // Delay animasi beruntun
+            );
+        });
     }
 
     _startGame(sceneKey) {
@@ -206,46 +228,162 @@ export class MenuScene extends Phaser.Scene {
             audioManager.init();
             audioManager.playPop();
         }
-        this.cameras.main.fadeOut(400, 0, 0, 0);
+        
+        // Transisi mewah
+        this.cameras.main.fadeOut(500, 255, 255, 255);
         this.cameras.main.once('camerafadeoutcomplete', () => {
             this.scene.start(sceneKey);
         });
     }
 
+    /**
+     * Tombol Glassmorphism Baru
+     */
+    _createGlassButton(x, y, label, desc, color, onClick, delay = 0) {
+        const btnWidth = 400;
+        const btnHeight = 75;
+
+        const container = this.add.container(x, y);
+        container.setScale(0); // Mulai dari scale 0 untuk animasi masuk
+
+        // --- Base Glow Background (Solid Color, tapi ada di layer bawah) ---
+        const glow = this.add.graphics();
+        glow.fillStyle(color, 0.4);
+        glow.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 20);
+        
+        // --- Glass overlay ---
+        const bg = this.add.graphics();
+        bg.fillStyle(0xffffff, 0.15); 
+        bg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 20);
+        // Border
+        bg.lineStyle(2, 0xffffff, 0.6);
+        bg.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 20);
+
+        container.add([glow, bg]);
+
+        // --- Teks ---
+        const labelText = this.add.text(0, -12, label, {
+            fontFamily: 'Nunito, sans-serif',
+            fontSize: '24px',
+            fontWeight: '900',
+            color: '#ffffff',
+            align: 'center',
+            shadow: { offsetX: 1, offsetY: 2, color: '#00000088', blur: 3, fill: true }
+        }).setOrigin(0.5);
+
+        const descText = this.add.text(0, 15, desc, {
+            fontFamily: 'Nunito, sans-serif',
+            fontSize: '15px',
+            fontWeight: '600',
+            color: '#ffffffee',
+            align: 'center'
+        }).setOrigin(0.5);
+
+        container.add([labelText, descText]);
+
+        // --- Hit Area ---
+        container.setSize(btnWidth, btnHeight);
+        container.setInteractive({
+            hitArea: new Phaser.Geom.Rectangle(-btnWidth/2, -btnHeight/2, btnWidth, btnHeight),
+            hitAreaCallback: Phaser.Geom.Rectangle.Contains,
+            useHandCursor: true
+        });
+
+        // --- Interaksi ---
+        const redrawGlow = (alpha, scale) => {
+            glow.clear();
+            glow.fillStyle(color, alpha);
+            // Bikin glow sedikit lebih besar saat hover
+            glow.fillRoundedRect((-btnWidth/2) - scale, (-btnHeight/2) - scale, btnWidth + (scale*2), btnHeight + (scale*2), 20);
+        };
+
+        container.on('pointerover', () => {
+            redrawGlow(0.7, 5);
+            this.tweens.add({
+                targets: container,
+                scaleX: 1.05,
+                scaleY: 1.05,
+                duration: 150,
+                ease: 'Back.easeOut'
+            });
+        });
+
+        container.on('pointerout', () => {
+            redrawGlow(0.4, 0);
+            this.tweens.add({
+                targets: container,
+                scaleX: 1.0,
+                scaleY: 1.0,
+                duration: 150,
+                ease: 'Sine.easeOut'
+            });
+        });
+
+        container.on('pointerdown', () => {
+            const audioManager = this.registry.get('audioManager');
+            if (audioManager) audioManager.init();
+
+            this.tweens.add({
+                targets: container,
+                scaleX: 0.9,
+                scaleY: 0.9,
+                duration: 100,
+                yoyo: true,
+                ease: 'Sine.easeInOut',
+                onComplete: () => {
+                    if (onClick) onClick();
+                }
+            });
+        });
+
+        // --- Animasi Masuk berurutan ---
+        this.tweens.add({
+            targets: container,
+            scaleX: 1,
+            scaleY: 1,
+            duration: 500,
+            delay: delay,
+            ease: 'Back.easeOut'
+        });
+    }
+
     _createMascot(width, height) {
-        // Mascot (Owl)
-        const mascot = this.add.text(60, height - 80, '🦉', { fontSize: '80px' }).setOrigin(0.5);
+        // Mascot (Owl) dipindah agak ke kiri bawah
+        const mascot = this.add.text(80, height - 90, '🦉', { fontSize: '90px' }).setOrigin(0.5);
         mascot.setInteractive({ useHandCursor: true });
         
-        // Animasi bernapas (breathing)
+        // Animasi bernapas (breathing) yang lebih bouncy
         this.tweens.add({
             targets: mascot,
-            scaleY: 1.05,
-            y: mascot.y - 10,
-            duration: 1200,
+            scaleX: 1.05,
+            scaleY: 0.95,
+            duration: 800,
             yoyo: true,
             repeat: -1,
             ease: 'Sine.easeInOut'
         });
 
-        // Bubble Chat
-        const bubble = this.add.container(130, height - 140);
-        const bg = this.add.graphics();
-        bg.fillStyle(0xffffff, 1);
-        bg.fillRoundedRect(0, 0, 160, 50, 15);
+        // Bubble Chat (Glassmorphism style)
+        const bubble = this.add.container(170, height - 150);
         
-        // Panah bubble
+        const bg = this.add.graphics();
+        bg.fillStyle(0xffffff, 0.85); // Putih agak solid agar teks terbaca
+        bg.fillRoundedRect(0, 0, 180, 60, 20);
+        bg.lineStyle(2, 0xffffff, 1);
+        bg.strokeRoundedRect(0, 0, 180, 60, 20);
+        
+        // Panah bubble ke arah maskot
         bg.beginPath();
-        bg.moveTo(10, 50);
-        bg.lineTo(20, 65);
-        bg.lineTo(30, 50);
+        bg.moveTo(10, 60);
+        bg.lineTo(15, 80);
+        bg.lineTo(35, 60);
         bg.fillPath();
 
-        const msg = this.add.text(80, 25, 'Ayo Bermain!', {
+        const msg = this.add.text(90, 30, 'Klik Aku!', {
             fontFamily: 'Nunito, sans-serif',
             fontSize: '18px',
-            fontStyle: 'bold',
-            color: '#333'
+            fontWeight: 'bold',
+            color: '#333333'
         }).setOrigin(0.5);
 
         bubble.add([bg, msg]);
@@ -259,228 +397,32 @@ export class MenuScene extends Phaser.Scene {
                 audioManager.playPop();
             }
 
-            // Animasi lompat maskot
-            this.tweens.add({
+            // Animasi lompat maskot (squash & stretch)
+            this.tweens.chain({
                 targets: mascot,
-                y: mascot.y - 40,
-                duration: 150,
-                yoyo: true,
-                ease: 'Power1'
+                tweens: [
+                    { scaleY: 0.8, scaleX: 1.2, duration: 100 },
+                    { y: mascot.y - 60, scaleY: 1.1, scaleX: 0.9, duration: 200, ease: 'Power2' },
+                    { y: mascot.y, scaleY: 0.9, scaleX: 1.1, duration: 200, ease: 'Bounce.easeOut' },
+                    { scaleY: 1, scaleX: 1, duration: 100 }
+                ]
             });
 
-            // Tampilkan bubble
             bubble.setAlpha(1);
             bubble.setScale(1);
             
-            // Ubah teks bubble secara acak
-            const chats = ['Halo!', 'Semangat!', 'Kamu Pintar!', 'Ayo Bermain!'];
+            const chats = ['Halo teman!', 'Semangat!', 'Kamu Hebat!', 'Ayo Belajar!', 'Wah, Seru!'];
             msg.setText(Phaser.Math.RND.pick(chats));
 
             this.tweens.add({
                 targets: bubble,
-                y: height - 160,
+                y: height - 170,
                 alpha: 0,
                 duration: 2000,
-                delay: 1000,
+                delay: 1500,
                 ease: 'Sine.easeIn',
-                onComplete: () => { bubble.y = height - 140; }
+                onComplete: () => { bubble.y = height - 150; }
             });
         });
-    }
-
-    /**
-     * Tampilkan popup "Segera Hadir" untuk level yang belum tersedia.
-     */
-    _showComingSoon(x, y) {
-        const text = this.add.text(x, y - 60, '🔒 Segera Hadir!', {
-            fontFamily: 'Nunito, sans-serif',
-            fontSize: '24px',
-            fontStyle: 'bold',
-            color: '#FFD93D',
-            align: 'center',
-            stroke: '#000000',
-            strokeThickness: 3,
-        }).setOrigin(0.5).setDepth(300).setScale(0);
-
-        this.tweens.add({
-            targets: text,
-            scaleX: 1.1,
-            scaleY: 1.1,
-            duration: 250,
-            ease: 'Back.easeOut',
-            onComplete: () => {
-                this.tweens.add({
-                    targets: text,
-                    y: y - 100,
-                    alpha: 0,
-                    scaleX: 0.8,
-                    scaleY: 0.8,
-                    duration: 700,
-                    delay: 500,
-                    ease: 'Sine.easeIn',
-                    onComplete: () => text.destroy()
-                });
-            }
-        });
-    }
-
-    /**
-     * Helper: buat tombol interaktif yang besar dan ramah anak.
-     * 
-     * FIX: Menggunakan Graphics-based hit area pada container
-     * dengan setInteractive() langsung pada container, bukan zone child.
-     * Ini memperbaiki masalah klik yang tidak terdeteksi.
-     * 
-     * @param {number} x - Center X
-     * @param {number} y - Center Y
-     * @param {string} label - Teks tombol
-     * @param {string} desc - Deskripsi kecil
-     * @param {number} color - Warna normal
-     * @param {number} hoverColor - Warna hover
-     * @param {Function} onClick - Callback saat diklik
-     * @param {number} delay - Delay animasi masuk
-     */
-    _createButton(x, y, label, desc, color, hoverColor, onClick, delay = 0) {
-        const btnWidth = 380;
-        const btnHeight = 75;
-
-        // Container untuk grouping
-        const container = this.add.container(x, y);
-        container.setScale(0);
-        container.setDepth(10);
-
-        // Background tombol
-        const bg = this.add.graphics();
-        bg.fillStyle(color, 1);
-        bg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 20);
-        // Subtle border
-        bg.lineStyle(2, 0xffffff, 0.15);
-        bg.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 20);
-        container.add(bg);
-
-        // Label teks
-        const labelText = this.add.text(0, -10, label, {
-            fontFamily: 'Nunito, sans-serif',
-            fontSize: '22px',
-            fontStyle: 'bold',
-            color: '#ffffff',
-            align: 'center'
-        }).setOrigin(0.5);
-        container.add(labelText);
-
-        // Deskripsi
-        const descText = this.add.text(0, 16, desc, {
-            fontFamily: 'Nunito, sans-serif',
-            fontSize: '14px',
-            color: '#ffffffaa',
-            align: 'center'
-        }).setOrigin(0.5);
-        container.add(descText);
-
-        // ===== FIX: Set interactive langsung pada container =====
-        // Menggunakan setSize + setInteractive pada container itu sendiri
-        // Ini jauh lebih reliable daripada child zone di dalam container
-        container.setSize(btnWidth + 20, btnHeight + 20);
-        container.setInteractive({
-            hitArea: new Phaser.Geom.Rectangle(
-                -(btnWidth + 20) / 2, -(btnHeight + 20) / 2,
-                btnWidth + 20, btnHeight + 20
-            ),
-            hitAreaCallback: Phaser.Geom.Rectangle.Contains,
-            useHandCursor: true
-        });
-
-        // --- Redraw helper ---
-        const redrawBg = (fillColor, borderAlpha) => {
-            bg.clear();
-            bg.fillStyle(fillColor, 1);
-            bg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 20);
-            bg.lineStyle(2, 0xffffff, borderAlpha);
-            bg.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 20);
-        };
-
-        // --- Event handlers langsung pada container ---
-        container.on('pointerover', () => {
-            redrawBg(hoverColor, 0.3);
-            this.tweens.add({
-                targets: container,
-                scaleX: 1.05,
-                scaleY: 1.05,
-                duration: 100,
-                ease: 'Sine.easeOut'
-            });
-        });
-
-        container.on('pointerout', () => {
-            redrawBg(color, 0.15);
-            this.tweens.add({
-                targets: container,
-                scaleX: 1.0,
-                scaleY: 1.0,
-                duration: 100,
-                ease: 'Sine.easeOut'
-            });
-        });
-
-        container.on('pointerdown', () => {
-            // Init audio pada klik pertama
-            const audioManager = this.registry.get('audioManager');
-            if (audioManager) audioManager.init();
-
-            // Press effect (visual only — jangan tunda callback)
-            this.tweens.add({
-                targets: container,
-                scaleX: 0.95,
-                scaleY: 0.95,
-                duration: 80,
-                yoyo: true,
-                ease: 'Sine.easeInOut'
-            });
-
-            // Fire callback langsung tanpa menunggu animasi
-            if (onClick) onClick();
-        });
-
-        // --- Animasi masuk ---
-        this.tweens.add({
-            targets: container,
-            scaleX: 1,
-            scaleY: 1,
-            duration: 400,
-            delay: delay,
-            ease: 'Back.easeOut'
-        });
-    }
-
-    /**
-     * Dekorasi melayang di background.
-     */
-    _addFloatingDecorations(width, height) {
-        const shapes = ['●', '▲', '■', '★', '♦'];
-        const colors = ['#FF6B35', '#4ECB71', '#4A90D9', '#FFD93D', '#E84393'];
-
-        for (let i = 0; i < 8; i++) {
-            const shape = Phaser.Math.RND.pick(shapes);
-            const color = Phaser.Math.RND.pick(colors);
-            const x = Phaser.Math.Between(30, width - 30);
-            const y = Phaser.Math.Between(30, height - 30);
-
-            const text = this.add.text(x, y, shape, {
-                fontSize: `${Phaser.Math.Between(20, 40)}px`,
-                color: color
-            }).setOrigin(0.5).setAlpha(0.12);
-
-            // Animasi melayang
-            this.tweens.add({
-                targets: text,
-                y: y - Phaser.Math.Between(15, 35),
-                alpha: { from: 0.08, to: 0.18 },
-                duration: Phaser.Math.Between(3000, 5000),
-                yoyo: true,
-                repeat: -1,
-                ease: 'Sine.easeInOut',
-                delay: Phaser.Math.Between(0, 2000)
-            });
-        }
     }
 }

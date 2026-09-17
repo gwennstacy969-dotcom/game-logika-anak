@@ -16,6 +16,8 @@ import { CountingScene } from './scenes/CountingScene.js';
 import { ColorMatchScene } from './scenes/ColorMatchScene.js';
 import { MemoryScene } from './scenes/MemoryScene.js';
 import { PatternScene } from './scenes/PatternScene.js';
+import { CodingScene } from './scenes/CodingScene.js';
+import { MazeScene } from './scenes/MazeScene.js';
 
 // ============================================
 // PHASER GAME CONFIGURATION
@@ -51,8 +53,8 @@ const config = {
     backgroundColor: '#0f0e17',
 
     // --- Scene Registration ---
-    // Urutan: BootScene → ProfileScene → MenuScene → ShapeSortScene → CountingScene → ColorMatchScene → MemoryScene → PatternScene
-    scene: [BootScene, ProfileScene, MenuScene, ShapeSortScene, CountingScene, ColorMatchScene, MemoryScene, PatternScene],
+    // Urutan: BootScene → ProfileScene → MenuScene → ShapeSortScene → CountingScene → ColorMatchScene → MemoryScene → PatternScene → CodingScene → MazeScene
+    scene: [BootScene, ProfileScene, MenuScene, ShapeSortScene, CountingScene, ColorMatchScene, MemoryScene, PatternScene, CodingScene, MazeScene],
 
     // --- Input Configuration ---
     input: {
