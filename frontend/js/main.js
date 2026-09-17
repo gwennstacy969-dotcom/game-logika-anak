@@ -98,17 +98,37 @@ if (screen.orientation && screen.orientation.lock) {
 }
 
 // --- Sembunyikan loading screen HTML saat game sudah siap ---
-window.addEventListener('load', () => {
+// Strategi berlapis agar tidak stuck loading:
+// 1. Game 'ready' event (paling cepat)
+// 2. window.load (fallback jika ready sudah lewat)
+// 3. Hard timeout 6 detik (fallback terakhir)
+
+function hideLoadingScreen() {
     const loadingScreen = document.getElementById('loading-screen');
-    if (loadingScreen) {
-        // Delay sedikit agar transisi smooth
+    if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
+        loadingScreen.classList.add('hidden');
         setTimeout(() => {
-            loadingScreen.classList.add('hidden');
-            // Hapus dari DOM setelah animasi selesai
-            setTimeout(() => loadingScreen.remove(), 500);
-        }, 300);
+            if (loadingScreen.parentNode) loadingScreen.remove();
+        }, 600);
     }
+}
+
+// Strategi 1: Saat Phaser game instance siap
+game.events.once('ready', () => {
+    setTimeout(hideLoadingScreen, 200);
 });
+
+// Strategi 2: Cek readyState
+if (document.readyState === 'complete') {
+    setTimeout(hideLoadingScreen, 400);
+} else {
+    window.addEventListener('load', () => {
+        setTimeout(hideLoadingScreen, 400);
+    });
+}
+
+// Strategi 3: Hard timeout — pastikan tidak stuck
+setTimeout(hideLoadingScreen, 6000);
 
 // --- Prevent context menu pada game canvas (klik kanan) ---
 document.addEventListener('contextmenu', (e) => {

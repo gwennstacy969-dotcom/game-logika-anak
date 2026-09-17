@@ -1,39 +1,43 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <!-- ============================================
          Game Logika & Matematika Dasar
          Untuk anak usia 4-7 tahun
          ============================================ -->
     <meta charset="UTF-8">
-    
+
     <!-- SEO & Meta -->
     <title>Logika & Matematika Dasar — Game Edukasi Anak</title>
-    <meta name="description" content="Game edukasi interaktif untuk anak usia 4-7 tahun. Belajar logika dan matematika dasar melalui permainan drag-and-drop yang menyenangkan.">
+    <meta name="description"
+        content="Game edukasi interaktif untuk anak usia 4-7 tahun. Belajar logika dan matematika dasar melalui permainan drag-and-drop yang menyenangkan.">
     <meta name="keywords" content="game edukasi, anak, logika, matematika, belajar, drag and drop">
     <meta name="author" content="Game Logika Anak">
 
     <!-- Viewport untuk mobile (WAJIB) -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
+
     <!-- Mencegah telephone number detection di mobile -->
     <meta name="format-detection" content="telephone=no">
-    
+
     <!-- PWA / Mobile Web App -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Logika Anak">
-    
+
     <!-- Theme color untuk browser mobile -->
     <meta name="theme-color" content="#667eea">
 
     <!-- Favicon (emoji fallback) -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧩</text></svg>">
-    
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧩</text></svg>">
+
     <!-- Stylesheet -->
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
     <!-- Loading Screen (ditampilkan sebelum Phaser selesai load) -->
     <div id="loading-screen">
@@ -49,32 +53,15 @@
     <div id="game-container"></div>
 
     <!-- ============================================
-         PHASER 3 ENGINE (file lokal)
+         PHASER 3 ENGINE (file lokal — tidak perlu internet)
          ============================================ -->
-    <!-- Menggunakan versi lokal agar bisa dimainkan offline -->
+    <!-- Phaser disimpan lokal agar load lebih cepat (tidak butuh internet) -->
     <script src="js/lib/phaser.min.js"></script>
-    
-    <!-- Failsafe Loading Screen Hider jika error atau file:// protocol (CORS issue) -->
-    <script>
-        // Timeout 5 detik: Jika game tidak termuat, tampilkan pesan peringatan Live Server
-        setTimeout(function() {
-            var loader = document.getElementById('loading-screen');
-            if (loader && !loader.classList.contains('hidden')) {
-                loader.innerHTML = `
-                    <h1>⚠️ Game Tidak Termuat!</h1>
-                    <p style="text-align: center; color: white; padding: 20px;">
-                        Sepertinya Anda membuka file ini dengan klik ganda (<strong>file://</strong>).<br><br>
-                        Game ini membutuhkan Web Server untuk berjalan.<br>
-                        Silakan buka menggunakan ekstensi <strong>Live Server</strong> di VS Code.
-                    </p>
-                `;
-            }
-        }, 5000);
-    </script>
 
     <!-- ============================================
          GAME SCRIPTS (ES Modules)
          ============================================ -->
     <script type="module" src="js/main.js"></script>
 </body>
+
 </html>
