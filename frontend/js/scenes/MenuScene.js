@@ -35,6 +35,9 @@ export class MenuScene extends Phaser.Scene {
 
         // --- Maskot Interaktif ---
         this._createMascot(width, height);
+
+        // --- Tombol Fullscreen (Mobile Friendly) ---
+        this._createFullscreenButton(width, height);
     }
 
     _createPremiumBackground(width, height) {
@@ -424,6 +427,39 @@ export class MenuScene extends Phaser.Scene {
                 ease: 'Sine.easeIn',
                 onComplete: () => { bubble.y = height - 150; }
             });
+            });
+        });
+    }
+
+    _createFullscreenButton(width, height) {
+        // Tombol Fullscreen di pojok kanan atas
+        const btn = this.add.container(width - 60, 50);
+        const bg = this.add.graphics();
+        bg.fillStyle(0xffffff, 0.15);
+        bg.fillRoundedRect(-30, -20, 60, 40, 10);
+        bg.lineStyle(2, 0xffffff, 0.5);
+        bg.strokeRoundedRect(-30, -20, 60, 40, 10);
+        
+        const icon = this.add.text(0, 0, '🔲', { fontSize: '24px' }).setOrigin(0.5);
+        btn.add([bg, icon]);
+        
+        btn.setSize(60, 40);
+        btn.setInteractive({ useHandCursor: true }).setDepth(200);
+
+        btn.on('pointerdown', () => {
+            if (this.scale.isFullscreen) {
+                this.scale.stopFullscreen();
+            } else {
+                this.scale.startFullscreen();
+            }
+        });
+
+        // Hover animation
+        btn.on('pointerover', () => {
+            this.tweens.add({ targets: btn, scale: 1.1, duration: 100 });
+        });
+        btn.on('pointerout', () => {
+            this.tweens.add({ targets: btn, scale: 1, duration: 100 });
         });
     }
 }
